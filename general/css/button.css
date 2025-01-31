@@ -1,0 +1,67 @@
+.btn {
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    padding: 10px 20px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    max-width: 100%;
+}
+
+.btn-green {
+    background-color: #28a745;
+}
+
+.btn-green:hover {
+    background-color: #218838;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-red {
+    background-color: #dc3545;
+}
+
+.btn-red:hover {
+    background-color: #c82333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-grey {
+    background-color: #6c757d;
+}
+
+.btn-grey:hover {
+    background-color: #5a6268;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-blue {
+    background-color: #007bff;
+}
+
+.btn-blue:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Menu button styles */
+.menu-btn {
+    background-color: #555;
+    /* Slightly lighter gray background */
+    color: #e0e0e0;
+    /* Light gray text for good contrast */
+    border: 1px solid #666;
+    /* Slightly lighter border for contrast */
+}
+
+.menu-btn:hover {
+    background-color: #666;
+    /* Lighter gray on hover */
+    border-color: #777;
+    /* Border color on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Slightly more pronounced shadow */
+}
