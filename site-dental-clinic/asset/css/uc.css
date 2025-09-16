@@ -181,10 +181,10 @@ input, textarea, select {
 }
 
 input[type="date"], input[type="time"], select {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='8' viewBox='0 0 16 6'><path d='M1 1 L5 5 L9 1' fill='%23ccc' /></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='8' viewBox='-4 0 16 6'><path d='M1 1 L5 5 L9 1' fill='%23ccc' /></svg>");
     background-position: right center;
     background-repeat: no-repeat;
-    padding: 0.5em 0.5em 0.5em 0.75em;
+    padding: 0.5em 24px 0.5em 0.75em;
 
     -moz-appearance: none;
     -webkit-appearance: none;
