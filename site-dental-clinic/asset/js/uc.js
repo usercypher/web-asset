@@ -609,7 +609,7 @@ limitations under the License.
                 var keys = keyMap[key];
                 var keysLength = keys.length;
                 for (var i = 0; i < keysLength; i++) {
-                    that.processElement(keys[i], keys[i].getAttribute("x-key-window-" + key));
+                    that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key));
                 }
             }
             if (key === "tab" || key === 9) {
