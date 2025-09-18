@@ -567,7 +567,7 @@ limitations under the License.
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
-                            if (n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-") el.setAttribute(n, this.value);
+                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, this.value);
                         }
                         that.processElement(el, el.getAttribute("x-on-input"));
                     }, 300);
