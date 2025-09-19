@@ -472,8 +472,10 @@ limitations under the License.
             last: null
         };
         this.watchers = {};
+        this.isRegistering = 0;
     };
     TagX.prototype.register = function(elements, tab = "") {
+        this.registerDepth++;
         var tabRange = tab.split(/\s*:\s*/);
         var elementsLength = elements.length;
 
@@ -623,6 +625,7 @@ limitations under the License.
                 }
             }
         };
+        this.registerDepth--;
     };
     TagX.prototype.watch = function(key, callback) {
         if (!this.watchers[key]) this.watchers[key] = [];
@@ -678,6 +681,7 @@ limitations under the License.
         this.globalVars = vals;
     };
     TagX.prototype.processElement = function(el, elValue) {
+        if (this.registerDepth > 0) return;
         var that = this;
         if (this.isProcessing) {
             return setTimeout(function () {
