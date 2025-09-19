@@ -472,7 +472,7 @@ limitations under the License.
             last: null
         };
         this.watchers = {};
-        this.isRegistering = 0;
+        this.registerDepth = 0;
     };
     TagX.prototype.register = function(elements, tab = "") {
         this.registerDepth++;
