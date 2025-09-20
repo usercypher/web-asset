@@ -18,6 +18,12 @@ limitations under the License.
     var global = (typeof window !== 'undefined') ? window: this;
 
     var Utils = {
+        htmlEncode: function (str) {
+            return str.replace(/[&<>"']/g, function(match) { switch (match) { case '&': return '&amp;'; case '<': return '&lt;'; case '>': return '&gt;'; case '"': return '&quot;'; case "'": return '&#39;'; } });
+        },
+        htmlDecode: function htmlDecode(str) {
+            return str.replace(/&(amp|lt|gt|quot|#39);/g, function(match, entity) { switch (entity) { case 'amp':  return '&'; case 'lt':   return '<'; case 'gt':   return '>'; case 'quot': return '"'; case '#39':  return "'"; } });
+        },
         trim: function (s) {
             var start = 0, end = s.length - 1;
             while (start <= end && (s.charAt(start) === ' ' || s.charAt(start) === '\t')) start++;
@@ -569,10 +575,10 @@ limitations under the License.
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
-                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, this.value);
+                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, Utils.htmlEncode(this.value));
                         }
                         that.processElement(el, el.getAttribute("x-on-input"));
-                    }, 300);
+                    }, 100);
                 })(el);
             }
             if (el.hasAttribute("x-on-key")) {
@@ -585,7 +591,7 @@ limitations under the License.
                     }
                     el.onkeydown = function(e) {
                         e = e || window.event;
-                        var key = (e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase();
+                        var key = that.getComboKey(e);
                         if (keysObj[key]) {
                             e.preventDefault();
                             that.processElement(el, el.getAttribute("x-on-key-" + key));
@@ -606,7 +612,7 @@ limitations under the License.
 
         window.onkeydown = function(e) {
             e = e || window.event;
-            var key = (e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase();
+            var key = that.getComboKey(e);
             if (keyMap[key]) {
                 var keys = keyMap[key];
                 var keysLength = keys.length;
@@ -614,7 +620,7 @@ limitations under the License.
                     that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key));
                 }
             }
-            if (key === "tab" || key === 9) {
+            if (key === "tab") {
                 if (e.shiftKey && document.activeElement === that.tab.first) {
                     e.preventDefault();
                     that.tab.last.focus();
@@ -626,6 +632,13 @@ limitations under the License.
             }
         };
         this.registerDepth--;
+    };
+    TagX.prototype.getComboKey = function (e) {
+        var modifiers = [];
+        if (e.ctrlKey) modifiers.push('ctrl');
+        if (e.altKey) modifiers.push('alt');
+        if (e.shiftKey) modifiers.push('shift');
+        return (modifiers.length ? modifiers.join('-') + '-' : '') + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
     };
     TagX.prototype.watch = function(key, callback) {
         if (!this.watchers[key]) this.watchers[key] = [];
@@ -775,6 +788,33 @@ limitations under the License.
             }
         }
 
+        var attrsLength = attrs.length;
+        for (var i = 0; i < attrsLength; i++) {
+            var keyAttr = attrs[i];
+            var keyAttrArr = keyAttr.split("_");
+            var key = keyAttrArr[0];
+            var attr = keyAttrArr.slice(1).join('_');
+            var dataState = el.getAttribute("x-attr-" + keyAttr) || "";
+            var states = dataState.split(/\s*\|\s*/);
+
+            var els = this.globalRefs[key] || [];
+            var elsLength = els.length;
+            for (var j = 0; j < elsLength; j++) {
+                var refEl = els[j];
+                var current = refEl.getAttribute(attr);
+                var currentIndex = -1;
+                for (var k = 0; k < states.length; k++) {
+                    if (current === states[k]) {
+                        currentIndex = k;
+                        break;
+                    }
+                }
+                var newState = states[(currentIndex + 1) % states.length] || "_";
+                var oldState = refEl.getAttribute(attr);
+                if (oldState != newState) refEl.setAttribute(attr, newState);
+            }
+        }
+
         var tabRange = (el.getAttribute("x-tab") || "").split(/\s*:\s*/);
         this.tab = {
             first: null,
@@ -796,7 +836,7 @@ limitations under the License.
                         if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
                             refEl.checked = (val === true || val === "true" || val === "1");
                         } else if (val != refEl.value) {
-                            refEl.value = val;
+                            refEl.value = Utils.htmlDecode(val);
                         }
                     } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
                         refEl.innerHTML = val;
@@ -827,33 +867,6 @@ limitations under the License.
                     }, 75);
                     focusFound = true;
                 }
-            }
-        }
-
-        var attrsLength = attrs.length;
-        for (var i = 0; i < attrsLength; i++) {
-            var keyAttr = attrs[i];
-            var keyAttrArr = keyAttr.split("_");
-            var key = keyAttrArr[0];
-            var attr = keyAttrArr.slice(1).join('_');
-            var dataState = el.getAttribute("x-attr-" + keyAttr) || "";
-            var states = dataState.split(/\s*\|\s*/);
-
-            var els = this.globalRefs[key] || [];
-            var elsLength = els.length;
-            for (var j = 0; j < elsLength; j++) {
-                var refEl = els[j];
-                var current = refEl.getAttribute(attr);
-                var currentIndex = -1;
-                for (var k = 0; k < states.length; k++) {
-                    if (current === states[k]) {
-                        currentIndex = k;
-                        break;
-                    }
-                }
-                var newState = states[(currentIndex + 1) % states.length] || "_";
-                var oldState = refEl.getAttribute(attr);
-                if (oldState != newState) refEl.setAttribute(attr, newState);
             }
         }
     };
