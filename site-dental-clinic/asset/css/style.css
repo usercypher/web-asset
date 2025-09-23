@@ -105,6 +105,9 @@ header {
     padding: 1rem 2rem;
     display: flex;
     gap: 2rem;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
 }
 
 header h1 {
@@ -134,13 +137,8 @@ main {
 
 /* Responsive Toggle */
 @media (max-width: 768px) {
-    main {
+    main, header {
         flex-direction: column;
-    }
-    header {
-        position: sticky;
-        flex-direction: column;
-        top: 0;
     }
 }
 
@@ -242,6 +240,9 @@ main {
     display: none;
     cursor: pointer;
     color: var(--white);
+    position: absolute;
+    top: 0.5rem;
+    right: 2rem;
 }
 
 .sidebar {
