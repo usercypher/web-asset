@@ -175,6 +175,7 @@ main {
 
 .modal-content {
     background-color: #fff;
+    color: black;
     padding: 2rem;
     max-width: 400px;
     width: 100%;
