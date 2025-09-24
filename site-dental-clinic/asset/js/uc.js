@@ -536,9 +536,9 @@ limitations under the License.
                             }
                         };
                     }
-                    el.onclick = Utils.throttle(function() {
+                    el.onclick = function() {
                         that.processElement(el, el.getAttribute("x-on-click"));
-                    }, 300);
+                    };
                 })(el);
             }
             if (el.hasAttribute("x-on-enter")) {
@@ -571,14 +571,14 @@ limitations under the License.
             }
             if (el.hasAttribute("x-on-input")) {
                 (function(el) {
-                    el.oninput = Utils.debounce(function() {
+                    el.oninput = function() {
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
                             if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, Utils.htmlEncode(this.value));
                         }
                         that.processElement(el, el.getAttribute("x-on-input"));
-                    }, 100);
+                    };
                 })(el);
             }
             if (el.hasAttribute("x-on-key")) {
@@ -650,17 +650,17 @@ limitations under the License.
     TagX.prototype.getVar = function (key) {
         return this.globalVars[key];
     };
-    TagX.prototype.setVar = function (key, value, el = null) {
+    TagX.prototype.setVar = function (key, value) {
         var valOld = this.globalVars[key];
         this.globalVars[key] = value;
         if (this.watchers[key]) {
             for (var w = 0; w < this.watchers[key].length; w++) {
-                this.watchers[key][w](valOld, el);
+                this.watchers[key][w](valOld, value);
             }
         }
         if (this.watchers["*"]) {
             for (var w = 0; w < this.watchers["*"].length; w++) {
-                this.watchers["*"][w](key, valOld, el);
+                this.watchers["*"][w](valOld, value, key);
             }
         }
     };
@@ -671,27 +671,21 @@ limitations under the License.
         }
     };
     TagX.prototype.clean = function() {
-        var refs = {};
-        var vals = {};
         for (var key in this.globalRefs) {
             var els = this.globalRefs[key];
             var elsLength = els.length;
-            for (var i = 0; i < elsLength; i++) {
-                var el = els[i];
-                if (!document.body.contains(el)) continue;
-                if (!refs[key]) refs[key] = [];
-                refs[key].push(el);
-                if (!vals.hasOwnProperty(key)) {
-                    if (el.tagName === "INPUT" && (el.type === "checkbox" || el.type === "radio")) {
-                        vals[key] = el.checked;
-                    } else {
-                        vals[key] = el.value || (el.children.length === 0 ? el.innerHTML : "");
-                    }
-                }
+            var filteredEls = [];
+
+            for (var i = 0; i < elsLength; i++) if (document.body.contains(els[i])) filteredEls.push(els[i]);
+
+            if (filteredEls.length > 0) {
+                this.globalRefs[key] = filteredEls;
+            } else {
+                delete this.globalRefs[key];
+                delete this.globalVars[key];
+                if (this.watchers && this.watchers[key]) delete this.watchers[key];
             }
         }
-        this.globalRefs = refs;
-        this.globalVars = vals;
     };
     TagX.prototype.processElement = function(el, elValue) {
         if (this.registerDepth > 0) return;
@@ -843,7 +837,7 @@ limitations under the License.
                     }
                 }
                 if (data["x-var-"].hasOwnProperty(key)) {
-                    this.setVar(key, data["x-var-"][key], refEl);
+                    this.setVar(key, data["x-var-"][key]);
                 }
                 if (data["x-run-"].hasOwnProperty(key)) {
                     var triggers = data["x-run-"][key].split(/\s+/);
