@@ -1,0 +1,17 @@
+name: Reminder send
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at 00:00 UTC
+
+jobs:
+  send_post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send POST request with curl - reminder-send
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          curl -X POST https://cerillodentalclinic.dedyn.io/api/reminder-send \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "key=$API_KEY"
