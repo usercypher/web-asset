@@ -2,7 +2,7 @@ name: Keep repo active
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # every day at midnight UTC
+    - cron: '0 0 1 * *'  # At midnight UTC on the 1st day of every month
 
 jobs:
   keep-active:
