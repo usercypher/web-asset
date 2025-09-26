@@ -1,4 +1,4 @@
-name: Reminder send
+name: site-cerillodentalclinic-reminder-send
 
 on:
   schedule:
