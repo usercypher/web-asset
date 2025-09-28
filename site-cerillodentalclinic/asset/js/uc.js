@@ -65,6 +65,25 @@ limitations under the License.
             }
             return size;
         },
+        run: function (condition, callback, options = {}) {
+            var startTime = new Date().getTime();
+            interval = options.interval || 100;
+            timeout = options.timeout || 5000;
+            var intervalId = setInterval(function () {
+                try {
+                    if (condition()) {
+                        clearInterval(intervalId);
+                        callback();
+                    } else if (new Date().getTime() - startTime >= timeout) {
+                        clearInterval(intervalId);
+                        console.warn('Utils.run: timeout reached without condition being true.');
+                    }
+                } catch (e) {
+                    clearInterval(intervalId);
+                    console.error('Utils.run: error in condition or callback:', e);
+                }
+            }, interval);
+        },
         debounce: function (callback, time) {
             if (typeof time !== 'number' || typeof callback !== 'function') {
                 console.error('Utils.debounce: Invalid arguments');
@@ -433,6 +452,50 @@ limitations under the License.
         this.code = xhr.status;
         this.content = xhr.responseText;
     }
+    function Script() {
+        this.loadedScripts = {};
+    }
+    Script.prototype.load = function(options, callback) {
+        var self = this;
+        var src = options.src;
+        var loaded = self.loadedScripts[src];
+
+        if (loaded === true) {
+            if (callback) callback(false);
+            return;
+        }
+
+        if (loaded && loaded.push) {
+            loaded.push(callback);
+            return;
+        }
+
+        self.loadedScripts[src] = [callback];
+
+        var script = document.createElement('script');
+        for (var attr in options) script.setAttribute(attr, options[attr]);
+
+        script.onload = script.onreadystatechange = function() {
+            if (!script.readyState || /loaded|complete/.test(script.readyState)) {
+                var cbs = self.loadedScripts[src];
+                for (var i = 0; i < cbs.length; i++) {
+                    if (typeof cbs[i] === 'function') cbs[i](true);
+                }
+                self.loadedScripts[src] = true;
+
+                script.onload = script.onreadystatechange = null;
+            }
+        };
+
+        script.onerror = function() {
+            if (console && console.error) {
+                console.error('Failed to load script: ' + src);
+            }
+            delete self.loadedScripts[src];
+        };
+
+        document.getElementsByTagName('head')[0].appendChild(script);
+    };
     function Tag(id) {
         this.tag = document.getElementById(id);
         if (!this.tag) {
@@ -869,6 +932,7 @@ limitations under the License.
     global.Url = Url;
     global.Request = Request;
     global.Response = Response;
+    global.Script = Script;
     global.Tag = Tag;
     global.TagX = TagX;
 })();

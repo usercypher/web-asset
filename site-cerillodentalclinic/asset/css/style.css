@@ -4,12 +4,7 @@
  * ------------------------------------------------------------------------
  */
 
-:root {
-    /* Layout Constants */
-    --sidebar-width: 220px;
-}
-
-body {
+html {
     /* Primary Theme Colors */
     --primary-color: #0056b3;
     --primary-light: #339af0;
@@ -45,9 +40,9 @@ body {
     --hover-bg: #dee2e6;
 
     /* Essentials */
-    --white: #ffffff;
-    --black: #000000;
     --badge-color: #dc3545;
+    /* Layout Constants */
+    --sidebar-width: 220px;
 }
 
 body {
@@ -62,7 +57,6 @@ body {
  * table
  * ------------------------------------------------------------------------
  */
-
 
 .table-nowrap {
     overflow-x: auto;
@@ -95,19 +89,17 @@ body {
 
 /**
  * ------------------------------------------------------------------------
- * header & main & top bar
+ * header & main
  * ------------------------------------------------------------------------
  */
 
 header {
     background: var(--primary-color);
-    color: var(--white);
+    color: white;
     padding: 1rem 2rem;
     display: flex;
     gap: 2rem;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
 }
 
 header h1 {
@@ -119,7 +111,7 @@ header h1 {
 main {
     display: flex;
     flex: 1;
-    min-height: 0;
+    min-height: 720px;
 }
 
 .main-content {
@@ -139,6 +131,10 @@ main {
 @media (max-width: 768px) {
     main, header {
         flex-direction: column;
+    }
+    header {   
+        position: sticky;
+        top: 0;
     }
 }
 
@@ -240,7 +236,7 @@ main {
     font-size: 1.5rem;
     display: none;
     cursor: pointer;
-    color: var(--white);
+    color: white;
     position: absolute;
     top: 0.5rem;
     right: 2rem;
@@ -248,7 +244,7 @@ main {
 
 .sidebar {
     width: var(--sidebar-width);
-    background: var(--white);
+    background: white;
     border-right: 1px solid var(--border-color);
     padding: 1rem;
     transition: transform 0.3s ease;
@@ -273,7 +269,7 @@ main {
 .nav-item.active {
     background-color: var(--hover-bg);
     border-left: 4px solid var(--primary-color);
-    padding-left: calc(1rem - 4px); /* Adjust for border width */
+    padding-left: calc(1rem - 4px);
 }
 .nav-item.active a {
     color: var(--primary-color);
@@ -291,8 +287,8 @@ main {
         transform: translateX(-100%);
         width: var(--sidebar-width);
         z-index: 998;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional: keep shadow */
-        background: var(--white);
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        background: white;
     }
 
     .sidebar.active {
@@ -302,92 +298,104 @@ main {
 
 /**
  * ------------------------------------------------------------------------
- * Chat Styles (Minimal & Stable Layout)
+ * Chat Styles
  * ------------------------------------------------------------------------
  */
 
 /* Floating Button */
 #chat-float-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.5rem;
-  background: var(--primary-color);
-  color: var(--white);
-  cursor: pointer;
-  z-index: 999;
-  border-radius: 50%;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    z-index: 999;
+    border-radius: 50%;
 }
 
 /* Chat Window */
 #chat-window {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 320px;
-  height: 400px;
-  display: none;
-  flex-direction: column;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-  z-index: 999;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 300px;
+    height: 400px;
+    display: none;
+    flex-direction: column;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    z-index: 999;
 }
 
 #chat-window.active {
-  display: flex;
+    display: flex;
 }
 
-/* Messages Area */
+/* Chat Header */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0.5rem;
+    background: var(--surface-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+#chat-clear {
+    background: transparent;
+    color: var(--text-color);
+    padding: 0.2rem 0.6rem;
+    transition: color 0.2s, background 0.2s;
+}
+
+/* Chat Messages */
 .chat-messages {
-  flex: 1;
-  padding: 0.75rem;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+    flex: 1;
+    padding: 0.75rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Message Bubble */
 .chat-message {
-  max-width: 80%;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  word-wrap: break-word;
-  background: var(--surface-bg);
-  color: var(--text-color);
-  user-select: none;
-  touch-action: manipulation;
+    max-width: 80%;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    background: var(--surface-bg);
+    color: var(--text-color);
+    user-select: none;
+    touch-action: manipulation;
 }
 
 .chat-message.sent {
-  align-self: flex-end;
-  background: var(--primary-light);
-  color: var(--white);
+    align-self: flex-end;
+    background: var(--primary-light);
+    color: white;
 }
 
-.chat-message.received {
-  align-self: flex-start;
-  background: var(--info-light);
-}
+.chat-message.received {}
 
-/* Input Area */
+/* Chat Input */
 .chat-input-container {
-  display: flex;
-  padding: 0.5rem;
-  border-top: 1px solid var(--border-color);
-  background: var(--surface-bg);
-  gap: 0.5rem;
+    display: flex;
+    padding: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--surface-bg);
+    gap: 0.5rem;
 }
 
 .chat-input-container input {
-  flex: 1;
-  min-width: 30px;
+    flex: 1;
+    min-width: 30px;
 }
-
