@@ -36,7 +36,11 @@
                     btn.type = 'button';
                     btn.className = 'pill date-btn';
                     btn.dataset.date = date;
-                    btn.textContent = date;
+                    btn.textContent = new Date(date).toLocaleDateString('en-US', {
+                        month: 'short',   // "Sep"
+                        day: 'numeric',   // "29"
+                        year: 'numeric'   // "2025"
+                    });
                     dateButtons.appendChild(btn);
                 });
             }
@@ -45,6 +49,12 @@
         dateButtons.addEventListener('click', (e) => {
             if (e.target.classList.contains('date-btn')) {
                 selectedDate = e.target.dataset.date;
+                
+                const formattedDate = new Date(selectedDate).toLocaleDateString('en-US', {
+                    month: 'short',   // "Sep"
+                    day: 'numeric',   // "29"
+                    year: 'numeric'   // "2025"
+                });
         
                 // Highlight
                 document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('active'));
@@ -75,8 +85,11 @@
                 var buttonId = 0;
                 slotList.forEach(slot => {
                     const row = document.createElement('tr');
+                    const formattedTimeStart = formatTime(slot.start);
+                    const formattedTimeEnd = formatTime(slot.end);
+                    
                     row.innerHTML = `
-                        <td>${slot.start} - ${slot.end}</td>
+                        <td>${formattedTimeStart} - ${formattedTimeEnd}</td>
                         <td>${slot.service_duration} min</td>
                         <td>${slot.service_price}</td>
                         <td>${slot.doctor_name}</td>
@@ -100,8 +113,8 @@
                                 x-val-appointment_time_end="${slot.end}"
                                 x-val-appointment_service_name_show="${selectedService}"
                                 x-val-appointment_service_price_show="${slot.service_price}"
-                                x-val-appointment_date_show="${selectedDate}"
-                                x-val-appointment_time_show="${slot.start} - ${slot.end}"
+                                x-val-appointment_date_show="${formattedDate}"
+                                x-val-appointment_time_show="${formattedTimeStart} - ${formattedTimeEnd}"
                                 x-val-appointment_doctor_name_show="${slot.doctor_name}"
                             >Book</button>
                         </td>
@@ -118,6 +131,17 @@
             }
         });
     };
+
+    function formatTime(timeStr) {
+        const [hours, minutes] = timeStr.split(':');
+        const date = new Date();
+        date.setHours(+hours, +minutes);
+      
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    }
 
     global.AppointmentSlots = AppointmentSlots;
 })();
