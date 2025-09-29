@@ -536,15 +536,19 @@ limitations under the License.
     function TagX() {
         this.globalRefs = {};
         this.globalVars = {};
+        this.globalKeys = {};
         this.tab = {
             first: null,
             last: null
         };
         this.watchers = {};
-        this.registerDepth = 0;
+        this.mutationDepth = 0;
+    };
+    TagX.prototype.isMutating = function() {
+        return this.mutationDepth > 0;
     };
     TagX.prototype.register = function(elements, tab = "") {
-        this.registerDepth++;
+        this.mutationDepth++;
         var tabRange = tab.split(/\s*:\s*/);
         var elementsLength = elements.length;
 
@@ -585,7 +589,6 @@ limitations under the License.
         }
 
         var that = this;
-        var keyMap = {};
         for (var i = 0; i < elementsLength; i++) {
             var el = elements[i];
             if (el.hasAttribute("x-on-click")) {
@@ -667,8 +670,8 @@ limitations under the License.
                 var keysLength = keys.length;
                 for (var j = 0; j < keysLength; j++) {
                     var key = keys[j];
-                    if (!keyMap[key]) keyMap[key] = [];
-                    keyMap[key].push(el);
+                    if (!that.globalKeys[key]) that.globalKeys[key] = [];
+                    that.globalKeys[key].push(el);
                 }
             }
         }
@@ -676,8 +679,8 @@ limitations under the License.
         window.onkeydown = function(e) {
             e = e || window.event;
             var key = that.getComboKey(e);
-            if (keyMap[key]) {
-                var keys = keyMap[key];
+            if (that.globalKeys[key]) {
+                var keys = that.globalKeys[key];
                 var keysLength = keys.length;
                 for (var i = 0; i < keysLength; i++) {
                     that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key));
@@ -694,7 +697,7 @@ limitations under the License.
                 }
             }
         };
-        this.registerDepth--;
+        this.mutationDepth--;
     };
     TagX.prototype.getComboKey = function (e) {
         var modifiers = [];
@@ -734,12 +737,14 @@ limitations under the License.
         }
     };
     TagX.prototype.clean = function() {
+        this.mutationDepth++;
+        var body = document.body;
         for (var key in this.globalRefs) {
             var els = this.globalRefs[key];
             var elsLength = els.length;
             var filteredEls = [];
 
-            for (var i = 0; i < elsLength; i++) if (document.body.contains(els[i])) filteredEls.push(els[i]);
+            for (var i = 0; i < elsLength; i++) if (body.contains(els[i])) filteredEls.push(els[i]);
 
             if (filteredEls.length > 0) {
                 this.globalRefs[key] = filteredEls;
@@ -749,9 +754,23 @@ limitations under the License.
                 if (this.watchers && this.watchers[key]) delete this.watchers[key];
             }
         }
+        for (var key in this.globalKeys) {
+            var els = this.globalKeys[key];
+            var elsLength = els.length;
+            var filteredEls = [];
+
+            for (var i = 0; i < elsLength; i++) if (body.contains(els[i])) filteredEls.push(els[i]);
+
+            if (filteredEls.length > 0) {
+                this.globalKeys[key] = filteredEls;
+            } else {
+                delete this.globalKeys[key];
+            }
+        }
+        this.mutationDepth--;
     };
     TagX.prototype.processElement = function(el, elValue) {
-        if (this.registerDepth > 0) return;
+        if (this.mutationDepth > 0) return;
         var that = this;
         if (this.isProcessing) {
             return setTimeout(function () {
@@ -923,7 +942,7 @@ limitations under the License.
                     var focusRef = refEl;
                     setTimeout(function() {
                         focusRef.focus();
-                    }, 75);
+                    }, 50);
                     focusFound = true;
                 }
             }
