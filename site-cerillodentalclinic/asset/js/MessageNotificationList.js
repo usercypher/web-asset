@@ -1,13 +1,14 @@
 (function() {
-    var global = (typeof window !== 'undefined') ? window: this;
+    var global = (typeof window !== 'undefined') ? window : this;
 
     function MessageNotificationList() {}
 
     MessageNotificationList.prototype.init = function(url, latestMessageTime) {
         var notificationContainer = new Tag("notification-container");
         var request = new Request(new XMLHttpRequest());
-        var getNotificationsInterval = null;
-        
+        var isPollingActive = true;
+        var initialPageURL = window.location.href;
+
         function notificationItemTemplate(data) {
             return `
                 <div class="block notification-item ${data.is_read}">
@@ -17,37 +18,58 @@
                 </div>
             `;
         }
-        
+
         function getNotifications() {
+            // Stop polling if user navigated away or polling was cancelled
+            if (!isPollingActive || window.location.href !== initialPageURL) {
+                return;
+            }
+
             request.addCallback(function(request, response) {
                 if (response.code === 0) {
                     notificationContainer.set('No internet connection.');
                 } else if (response.code > 299) {
-                    clearInterval(getNotificationsInterval);
+                    isPollingActive = false; // Stop polling on server error
+                    return;
                 } else {
-                    var result = JSON.parse(response.content);
+                    try {
+                        var result = JSON.parse(response.content);
 
-                    if (result.error) {
-                        console.log(result.error);
-                        return;
+                        if (result.error) {
+                            console.log(result.error);
+                            return;
+                        }
+
+                        var notificationItems = Object.fromEntries(
+                            Object.entries(result).reverse()
+                        );
+
+                        for (let key in notificationItems) {
+                            var notificationItem = notificationItems[key];
+
+                            latestMessageTime = notificationItem['sent_at'];
+
+                            notificationItem['is_read'] =
+                                notificationItem['key'] == null ? '' : 'read';
+
+                            notificationItem['sent_at'] = new Date().toLocaleDateString('en-US', {
+                                'year': 'numeric',
+                                'month': 'short',
+                                'day': 'numeric'
+                            });
+
+                            notificationContainer.prepend(
+                                notificationItemTemplate(notificationItem)
+                            );
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse response:", e);
                     }
+                }
 
-                    var notificationItems = result;
-                    notificationItems = Object.fromEntries(Object.entries(notificationItems).reverse());
-
-                    for (let key in notificationItems) {
-                        var notificationItem = notificationItems[key];
-                        latestMessageTime = notificationItem['sent_at'];
-                        notificationItem['is_read'] = notificationItem['key'] == null ? '' : 'read';
-                        notificationItem['sent_at'] = new Date().toLocaleDateString('en-US', {
-                            'year': 'numeric',
-                            'month': 'short',
-                            'day': 'numeric'
-                        });
-                        notificationContainer.prepend(notificationItemTemplate(notificationItem));
-                        
-                    }
-                    
+                // Schedule next poll
+                if (isPollingActive) {
+                    setTimeout(getNotifications, 30000);
                 }
             });
 
@@ -58,16 +80,17 @@
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
                 'content': Utils.objectToQuery({
-                    'latest_message_time' : latestMessageTime
+                    'latest_message_time': latestMessageTime
                 })
             });
         }
 
+        // Initial poll
         getNotifications();
 
-        getNotificationsInterval = setInterval(getNotifications, 30000);
+        // Cleanup on page unload
         window.addEventListener('beforeunload', function() {
-            clearInterval(getNotificationsInterval);
+            isPollingActive = false;
         });
     };
 

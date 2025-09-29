@@ -1,27 +1,39 @@
 (function() {
-    var global = (typeof window !== 'undefined') ? window: this;
+    var global = (typeof window !== 'undefined') ? window : this;
 
     function MessageNotificationCount() {}
 
     MessageNotificationCount.prototype.init = function(url) {
         var notificationBadge = new Tag("notification-badge");
         var request = new Request(new XMLHttpRequest());
-        var notificationInterval = null;
-        
+
+        var initialPageURL = window.location.href;
+        var isPollingActive = true;
+
         function getNotificationCount() {
+            // Stop polling if the URL has changed
+            if (!isPollingActive || window.location.href !== initialPageURL) {
+                return;
+            }
+
             request.addCallback(function(request, response) {
                 if (response.code === 0) {
                     notificationBadge.set('No internet connection.');
                 } else if (response.code > 299) {
-                    clearInterval(notificationInterval);
+                    isPollingActive = false; // stop future polling
                     return;
                 } else {
-                    if (response.content == "0") {
+                    if (response.content === "0") {
                         notificationBadge.tag.classList.remove('active');
                     } else {
                         notificationBadge.tag.classList.add('active');
                     }
                     notificationBadge.set(response.content);
+                }
+
+                // Schedule next poll if still active
+                if (isPollingActive) {
+                    setTimeout(getNotificationCount, 30000);
                 }
             });
 
@@ -30,11 +42,12 @@
             });
         }
 
+        // Initial call
         getNotificationCount();
-        
-        notificationInterval = setInterval(getNotificationCount, 30000);
+
+        // Cleanup on page unload
         window.addEventListener('beforeunload', function() {
-            clearInterval(notificationInterval);
+            isPollingActive = false;
         });
     };
 
