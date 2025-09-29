@@ -162,26 +162,28 @@ caption {
     text-align: left;
 }
 
-input, textarea, select, button, .button {
+input, textarea, select, button, .button, input.select {
     font-family: inherit;
     font-size: 1em;
     line-height: 1.5;
 }
 
-input, textarea, select {
+input, textarea, select, input.select {
     border: 1px solid #ccc;
     padding: 0.5em 0.75em;
 }
 
-input[type="date"], input[type="time"], select {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='8' viewBox='-4 0 16 6'><path d='M1 1 L5 5 L9 1' fill='%23ccc' /></svg>");
-    background-position: right center;
-    background-repeat: no-repeat;
-    padding: 0.5em 24px 0.5em 0.75em;
-
+input[type="date"], input[type="time"], select, input.select {
     -moz-appearance: none;
     -webkit-appearance: none;
     appearance: none;
+}
+
+input[type="checkbox"], input[type="radio"] {
+    height: 1em;
+    margin-right: 0.5em;
+    vertical-align: middle;
+    width: 1em;
 }
 
 textarea {
@@ -190,7 +192,7 @@ textarea {
     resize: vertical;
 }
 
-button, input[type="submit"], input[type="button"], input[type="reset"], .button {
+button, .button {
     background: #3498db;
     border: 0;
     color: #fff;
@@ -201,15 +203,8 @@ button, input[type="submit"], input[type="button"], input[type="reset"], .button
     display: inline-block;
 }
 
-button:hover, input[type="submit"]:hover, input[type="button"]:hover, input[type="reset"]:hover, .button:hover {
+button:hover, .button:hover {
     background: #2c80b4;        
-}
-
-input[type="checkbox"], input[type="radio"] {
-    height: 1em;
-    margin-right: 0.5em;
-    vertical-align: middle;
-    width: 1em;
 }
 
 label {
