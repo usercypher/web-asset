@@ -964,4 +964,5 @@ limitations under the License.
     global.Script = Script;
     global.Tag = Tag;
     global.TagX = TagX;
+    global.uc = true;
 })();
