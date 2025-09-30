@@ -7,12 +7,12 @@
         var notificationBadge = new Tag("notification-badge");
         var request = new Request(new XMLHttpRequest());
 
-        var initialPageURL = window.location.href;
+        var initialPageURL = new Url().base;
         var isPollingActive = true;
 
         function getNotificationCount() {
             // Stop polling if the URL has changed
-            if (!isPollingActive || window.location.href !== initialPageURL) {
+            if (!isPollingActive || new Url().base !== initialPageURL) {
                 return;
             }
 

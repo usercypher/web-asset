@@ -7,7 +7,7 @@
         var notificationContainer = new Tag("notification-container");
         var request = new Request(new XMLHttpRequest());
         var isPollingActive = true;
-        var initialPageURL = window.location.href;
+        var initialPageURL = new Url().base;
 
         function notificationItemTemplate(data) {
             return `
@@ -21,7 +21,7 @@
 
         function getNotifications() {
             // Stop polling if user navigated away or polling was cancelled
-            if (!isPollingActive || window.location.href !== initialPageURL) {
+            if (!isPollingActive || new Url().base !== initialPageURL) {
                 return;
             }
 
