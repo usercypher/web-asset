@@ -65,25 +65,6 @@ limitations under the License.
             }
             return size;
         },
-        run: function (condition, callback, options = {}) {
-            var startTime = new Date().getTime();
-            interval = options.interval || 100;
-            timeout = options.timeout || 5000;
-            var intervalId = setInterval(function () {
-                try {
-                    if (condition()) {
-                        clearInterval(intervalId);
-                        callback();
-                    } else if (new Date().getTime() - startTime >= timeout) {
-                        clearInterval(intervalId);
-                        console.warn('Utils.run: timeout reached without condition being true.');
-                    }
-                } catch (e) {
-                    clearInterval(intervalId);
-                    console.error('Utils.run: error in condition or callback:', e);
-                }
-            }, interval);
-        },
         debounce: function (callback, time) {
             if (typeof time !== 'number' || typeof callback !== 'function') {
                 console.error('Utils.debounce: Invalid arguments');
@@ -461,7 +442,7 @@ limitations under the License.
         var loaded = self.loadedScripts[src];
 
         if (loaded === true) {
-            if (callback) callback(false);
+            if (callback) (function(cb) { setTimeout(function () { cb(false); }, 0); })(callback);
             return;
         }
 
@@ -479,7 +460,7 @@ limitations under the License.
             if (!script.readyState || /loaded|complete/.test(script.readyState)) {
                 var cbs = self.loadedScripts[src];
                 for (var i = 0; i < cbs.length; i++) {
-                    if (typeof cbs[i] === 'function') cbs[i](true);
+                    if (typeof cbs[i] === 'function') (function(cb) { setTimeout(function () { cb(true); }, 0); })(cbs[i]);
                 }
                 self.loadedScripts[src] = true;
 
@@ -547,9 +528,9 @@ limitations under the License.
     TagX.prototype.isMutating = function() {
         return this.mutationDepth > 0;
     };
-    TagX.prototype.register = function(elements, tab = "") {
+    TagX.prototype.register = function(elements, tab) {
         this.mutationDepth++;
-        var tabRange = tab.split(/\s*:\s*/);
+        var tabRange = tab ? tab.split(/\s*:\s*/) : "";
         var elementsLength = elements.length;
 
         for (var i = 0; i < elementsLength; i++) {
@@ -598,10 +579,10 @@ limitations under the License.
                     if (!el.onkeydown) {
                         el.onkeydown = function(e) {
                             e = e || window.event;
-                            if (!propagate) {
-                                that.stopPropagation(e);
-                            }
                             if (e.key === "Enter" || (e.keyCode || e.which) === 13) {
+                                if (!propagate) {
+                                    that.stopPropagation(e);
+                                }
                                 that.processElement(el, el.getAttribute("x-on-click"));
                             }
                         };
@@ -742,7 +723,8 @@ limitations under the License.
     TagX.prototype.getVar = function (key) {
         return this.globalVars[key];
     };
-    TagX.prototype.setVar = function (key, value, el = null) {
+    TagX.prototype.setVar = function (key, value, el) {
+        el = el || null;
         var valOld = this.globalVars[key];
         this.globalVars[key] = value;
         if (this.watchers[key]) {
