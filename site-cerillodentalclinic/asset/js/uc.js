@@ -624,7 +624,7 @@ limitations under the License.
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
-                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, Utils.htmlEncode(this.value));
+                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, this.value);
                         }
                         that.processElement(el, el.getAttribute("x-on-input"));
                     };
@@ -914,10 +914,10 @@ limitations under the License.
                         if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
                             refEl.checked = (val === true || val === "true" || val === "1");
                         } else if (val != refEl.value) {
-                            refEl.value = Utils.htmlDecode(val);
+                            refEl.value = val;
                         }
                     } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
-                        refEl.innerHTML = val;
+                        refEl.innerHTML = Utils.htmlEncode(val);
                     }
                 }
             }
