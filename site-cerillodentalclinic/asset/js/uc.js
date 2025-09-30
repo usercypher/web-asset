@@ -205,9 +205,6 @@ limitations under the License.
         this.hash = value;
         return this;
     };
-    Url.prototype.getHash = function () {
-        return this.hash;
-    };
     Url.prototype.setQuery = function (key, value) {
         this.query[key] = value;
         return this;
@@ -218,9 +215,6 @@ limitations under the License.
     };
     Url.prototype.getQuery = function (key) {
         return this.query[key];
-    };
-    Url.prototype.getAllQuery = function () {
-        return this.query;
     };
     Url.prototype.toString = function () {
         var q = Utils.objectToQuery(this.query);
