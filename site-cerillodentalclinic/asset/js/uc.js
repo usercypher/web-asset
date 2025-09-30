@@ -594,15 +594,23 @@ limitations under the License.
             if (el.hasAttribute("x-on-click")) {
                 (function(el) {
                     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', 0);
+                    var propagate = !el.hasAttribute('x-no-prop');
                     if (!el.onkeydown) {
                         el.onkeydown = function(e) {
                             e = e || window.event;
+                            if (!propagate) {
+                                that.stopPropagation(e);
+                            }
                             if (e.key === "Enter" || (e.keyCode || e.which) === 13) {
                                 that.processElement(el, el.getAttribute("x-on-click"));
                             }
                         };
                     }
-                    el.onclick = function() {
+                    el.onclick = function(e) {
+                        e = e || window.event;
+                        if (!propagate) {
+                            that.stopPropagation(e);
+                        }
                         that.processElement(el, el.getAttribute("x-on-click"));
                     };
                 })(el);
@@ -655,11 +663,15 @@ limitations under the License.
                     for (var j = 0; j < keysLength; j++) {
                         keysObj[keys[j]] = true;
                     }
+                    var propagate = !el.hasAttribute('x-no-prop');
                     el.onkeydown = function(e) {
                         e = e || window.event;
                         var key = that.getComboKey(e);
                         if (keysObj[key]) {
-                            e.preventDefault();
+                            if (!propagate) {
+                                that.stopPropagation(e);
+                            }
+                            that.preventDefault(e);
                             that.processElement(el, el.getAttribute("x-on-key-" + key));
                         }
                     };
@@ -688,16 +700,30 @@ limitations under the License.
             }
             if (key === "tab") {
                 if (e.shiftKey && document.activeElement === that.tab.first) {
-                    e.preventDefault();
+                    that.preventDefault(e);
                     that.tab.last.focus();
                 }
                 if (!e.shiftKey && document.activeElement === that.tab.last) {
-                    e.preventDefault();
+                    that.preventDefault(e);
                     that.tab.first.focus();
                 }
             }
         };
         this.mutationDepth--;
+    };
+    TagX.prototype.preventDefault = function(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        } else {
+            e.returnValue = false;
+        }
+    };
+    TagX.prototype.stopPropagation = function(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        } else {
+            e.cancelBubble = true;
+        }
     };
     TagX.prototype.getComboKey = function (e) {
         var modifiers = [];
