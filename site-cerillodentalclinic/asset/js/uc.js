@@ -15,29 +15,50 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 (function() {
-    var global = (typeof window !== 'undefined') ? window: this;
+    var global = (typeof window !== "undefined") ? window: this;
 
     var Utils = {
+        run: function(condition, callback, options) {
+            options = options || {};
+            var startTime = new Date().getTime();
+            var interval = options.interval || 100;
+            var timeout = options.timeout || 30000;
+            var intervalId = setInterval(function () {
+                try {
+                    if (condition()) {
+                        clearInterval(intervalId);
+                        callback();
+                    } else if (new Date().getTime() - startTime >= timeout) {
+                        clearInterval(intervalId);
+                        console.log("Utils.run: timeout reached without condition being true.");
+                    }
+                } catch (e) {
+                    clearInterval(intervalId);
+                    console.log("Utils.run: error in condition or callback: " + e);
+                }
+            }, interval);
+        },
         htmlEncode: function (str) {
-            return str.replace(/[&<>"']/g, function(match) { switch (match) { case '&': return '&amp;'; case '<': return '&lt;'; case '>': return '&gt;'; case '"': return '&quot;'; case "'": return '&#39;'; } });
+            return str.replace(/[&<>"']/g, function(match) { switch (match) { case "&": return "&amp;"; case "<": return "&lt;"; case ">": return "&gt;"; case "\"": return "&quot;"; case "'": return "&#39;"; } });
         },
         htmlDecode: function htmlDecode(str) {
-            return str.replace(/&(amp|lt|gt|quot|#39);/g, function(match, entity) { switch (entity) { case 'amp':  return '&'; case 'lt':   return '<'; case 'gt':   return '>'; case 'quot': return '"'; case '#39':  return "'"; } });
+            return str.replace(/&(amp|lt|gt|quot|#39);/g, function(match, entity) { switch (entity) { case "amp":  return "&"; case "lt":   return "<"; case "gt":   return ">"; case "quot": return "\""; case "#39":  return "'"; } });
         },
         trim: function (s) {
-            var start = 0, end = s.length - 1;
-            while (start <= end && (s.charAt(start) === ' ' || s.charAt(start) === '\t')) start++;
-            while (end >= start && (s.charAt(end) === ' ' || s.charAt(end) === '\t')) end--;
+            var start = 0;
+            var end = s.length - 1;
+            while (start <= end && (s.charAt(start) === " " || s.charAt(start) === "\t")) { start++; }
+            while (end >= start && (s.charAt(end) === " " || s.charAt(end) === "\t")) { end--; }
             return s.substring(start, end + 1);
         },
         strReplace: function (s, data) {
             var keys = [];
             for (var k in data) {
                 if (data.hasOwnProperty(k)) {
-                    keys.push(k.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+                    keys.push(k.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, "\\$&"));
                 }
             }
-            return s.replace(new RegExp(keys.join('|'), 'g'), function(matched) {
+            return s.replace(new RegExp(keys.join("|"), "g"), function(matched) {
                 return data[matched];
             });
         },
@@ -66,8 +87,8 @@ limitations under the License.
             return size;
         },
         debounce: function (callback, time) {
-            if (typeof time !== 'number' || typeof callback !== 'function') {
-                console.error('Utils.debounce: Invalid arguments');
+            if (typeof time !== "number" || typeof callback !== "function") {
+                console.error("Utils.debounce: Invalid arguments");
                 return function () {};
             }
             var timer;
@@ -85,8 +106,8 @@ limitations under the License.
             return debounced;
         },
         throttle: function (callback, time) {
-            if (typeof time !== 'number' || typeof callback !== 'function') {
-                console.error('Utils.throttle: Invalid arguments');
+            if (typeof time !== "number" || typeof callback !== "function") {
+                console.error("Utils.throttle: Invalid arguments");
                 return function () {};
             }
             var lastCall = 0;
@@ -119,26 +140,26 @@ limitations under the License.
                 for (var key in obj) {
                     if (obj.hasOwnProperty(key)) {
                         var value = obj[key];
-                        var k = prefix ? prefix + '[' + key + ']': key;
+                        var k = prefix ? prefix + "[" + key + "]": key;
                         if (value === null || value === undefined) {
                             continue;
-                        } else if (Object.prototype.toString.call(value) === '[object Array]') {
+                        } else if (Object.prototype.toString.call(value) === "[object Array]") {
                             for (var i = 0; i < value.length; i++) {
                                 var v = value[i];
-                                if (typeof v === 'object') {
-                                    query.push(buildQuery(v, k + '[]'));
+                                if (typeof v === "object") {
+                                    query.push(buildQuery(v, k + "[]"));
                                 } else {
-                                    query.push(k + '[]=' + encodeURIComponent(v));
+                                    query.push(k + "[]=" + encodeURIComponent(v));
                                 }
                             }
-                        } else if (typeof value === 'object') {
+                        } else if (typeof value === "object") {
                             query.push(buildQuery(value, k));
                         } else {
-                            query.push(k + '=' + encodeURIComponent(value));
+                            query.push(k + "=" + encodeURIComponent(value));
                         }
                     }
                 }
-                return query.join('&');
+                return query.join("&");
             }
             return buildQuery(data, null);
         },
@@ -148,12 +169,12 @@ limitations under the License.
             function setDeep(obj, keys, value) {
                 var key = keys.shift();
                 if (keys.length === 0) {
-                    if (key === '') {
-                        if (Object.prototype.toString.call(obj) !== '[object Array]') obj = [];
+                    if (key === "") {
+                        if (Object.prototype.toString.call(obj) !== "[object Array]") obj = [];
                         obj.push(value);
                     } else if (obj[key] === undefined) {
                         obj[key] = value;
-                    } else if (Object.prototype.toString.call(obj[key]) === '[object Array]') {
+                    } else if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
                         obj[key].push(value);
                     } else {
                         obj[key] = [obj[key],
@@ -161,9 +182,9 @@ limitations under the License.
                     }
                     return obj;
                 }
-                if (key === '') {
-                    if (Object.prototype.toString.call(obj) !== '[object Array]') obj = [];
-                    if (obj.length === 0 || typeof obj[obj.length - 1] !== 'object') obj.push({});
+                if (key === "") {
+                    if (Object.prototype.toString.call(obj) !== "[object Array]") obj = [];
+                    if (obj.length === 0 || typeof obj[obj.length - 1] !== "object") obj.push({});
                     obj[obj.length - 1] = setDeep(obj[obj.length - 1], keys, value);
                 } else {
                     if (!obj[key]) obj[key] = {};
@@ -171,19 +192,19 @@ limitations under the License.
                 }
                 return obj;
             }
-            var parts = queryString.split('&');
+            var parts = queryString.split("&");
             for (var i = 0; i < parts.length; i++) {
                 var part = parts[i];
                 if (!part) continue;
-                var kv = part.split('=');
+                var kv = part.split("=");
                 var rawKey = decodeURIComponent(kv[0]);
-                var val = kv.length > 1 ? decodeURIComponent(kv[1]): '';
+                var val = kv.length > 1 ? decodeURIComponent(kv[1]): "";
                 var keys = [];
                 var keyRegex = /([^\[\]]+)|(\[\])/g;
                 var match;
                 while ((match = keyRegex.exec(rawKey)) !== null) {
                     if (match[1]) keys.push(match[1]);
-                    else keys.push('');
+                    else keys.push("");
                 }
                 query = setDeep(query, keys, val);
             }
@@ -191,13 +212,13 @@ limitations under the License.
         },
     };
     function Url(baseUrl) {
-        this.url = baseUrl || (global.location && global.location.href) || '';
-        var parts = this.url.split('#');
-        this.hash = '';
+        this.url = baseUrl || (global.location && global.location.href) || "";
+        var parts = this.url.split("#");
+        this.hash = "";
         if (parts[1]) {
             this.hash = parts[1];
         }
-        parts = parts[0].split('?');
+        parts = parts[0].split("?");
         this.base = parts[0];
         this.query = parts[1] ? Utils.queryToObject(parts[1]): {};
     }
@@ -218,13 +239,13 @@ limitations under the License.
     };
     Url.prototype.toString = function () {
         var q = Utils.objectToQuery(this.query);
-        return (q !== '' ? this.base + '?' + q: this.base) + (this.hash ? '#' + this.hash: '');
+        return (q !== "" ? this.base + "?" + q: this.base) + (this.hash ? "#" + this.hash: "");
     };
     Url.prototype.sync = function (replace) {
         replace = replace || false;
         var url = this.toString();
         if (history && history.pushState) {
-            history[replace ? 'replaceState': 'pushState']({}, '', url);
+            history[replace ? "replaceState": "pushState"]({}, "", url);
         } else {
             location.href = url;
         }
@@ -242,25 +263,25 @@ limitations under the License.
         this.data = {};
     }
     Request.prototype.send = function (url, option) {
-        var method = option.method || 'GET';
+        var method = option.method || "GET";
         var headers = option.headers || {};
-        var content = option.content || '';
+        var content = option.content || "";
         var timeout = option.timeout || -1;
         var timeoutId;
         var self = this;
         var cached = this.cacheEnabled ? this.getCacheEntry(url): null;
         if (cached) {
             this.nextCallback(this, new Response( {
-                'status': 200,
-                'responseText': cached,
-                'getAllResponseHeaders': function () {
-                    return 'X-Cache: HIT';
+                "status": 200,
+                "responseText": cached,
+                "getAllResponseHeaders": function () {
+                    return "X-Cache: HIT";
                 }
             }));
             return;
         }
         this.xhr.open(method, url, true);
-        this.xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        this.xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         for (var key in headers) {
             if (headers.hasOwnProperty(key)) {
                 this.xhr.setRequestHeader(key, headers[key]);
@@ -269,19 +290,19 @@ limitations under the License.
         if (timeout !== -1) {
             timeoutId = setTimeout(function () {
                 self.xhr.abort();
-                console.error('Request Error: Request timed out and was aborted.');
+                console.error("Request Error: Request timed out and was aborted.");
                 self.nextCallback(self, new Response( {
-                    'status': 408,
-                    'responseText': '',
-                    'getAllResponseHeaders': function () {
-                        return 'X-Timeout: true';
+                    "status": 408,
+                    "responseText": "",
+                    "getAllResponseHeaders": function () {
+                        return "X-Timeout: true";
                     }
                 }));
             }, timeout * 1000);
         }
         this.xhr.onreadystatechange = function () {
             if (self.xhr.readyState === 4) {
-                if (typeof timeoutId !== 'undefined') clearTimeout(timeoutId);
+                if (typeof timeoutId !== "undefined") clearTimeout(timeoutId);
                 var response = new Response(self.xhr);
                 if (response.code >= 200 && response.code < 300) {
                     if (response.content) {
@@ -299,7 +320,7 @@ limitations under the License.
         if (this.xhr && this.xhr.readyState !== 4) {
             this.xhr.abort();
             this.nextCallback(this, new Response(this.xhr));
-            console.error('Request Error: Request aborted.');
+            console.error("Request Error: Request aborted.");
         }
     };
     Request.prototype.retry = function () {
@@ -407,10 +428,10 @@ limitations under the License.
             var headerPairs = headerStr.split(/\r?\n/);
             for (var i = 0; i < headerPairs.length; i++) {
                 var line = headerPairs[i];
-                if (line === '') continue;
+                if (line === "") continue;
                 var colonPos = -1;
                 for (var j = 0; j < line.length; j++) {
-                    if (line.charAt(j) === ':') {
+                    if (line.charAt(j) === ":") {
                         colonPos = j;
                         break;
                     }
@@ -418,7 +439,7 @@ limitations under the License.
                 if (colonPos === -1) continue;
 
                 var key = Utils.trim(line.substring(0, colonPos)).toLowerCase();
-                if (key === '') continue;
+                if (key === "") continue;
                 var value = Utils.trim(line.substring(colonPos + 1));
                 this.headers[key] = value;
             }
@@ -447,14 +468,14 @@ limitations under the License.
 
         self.loadedScripts[src] = [callback];
 
-        var script = document.createElement('script');
-        for (var attr in options) script.setAttribute(attr, options[attr]);
+        var script = document.createElement("script");
+        for (var attr in options) { script.setAttribute(attr, options[attr]); }
 
         script.onload = script.onreadystatechange = function() {
-            if (!script.readyState || /loaded|complete/.test(script.readyState)) {
+            if (!script.readyState || (/loaded|complete/).test(script.readyState)) {
                 var cbs = self.loadedScripts[src];
                 for (var i = 0; i < cbs.length; i++) {
-                    if (typeof cbs[i] === 'function') (function(cb) { setTimeout(function () { cb(true); }, 0); })(cbs[i]);
+                    if (typeof cbs[i] === "function") (function(cb) { setTimeout(function () { cb(true); }, 0); })(cbs[i]);
                 }
                 self.loadedScripts[src] = true;
 
@@ -464,26 +485,26 @@ limitations under the License.
 
         script.onerror = function() {
             if (console && console.error) {
-                console.error('Failed to load script: ' + src);
+                console.error("Failed to load script: " + src);
             }
             delete self.loadedScripts[src];
         };
 
-        document.getElementsByTagName('head')[0].appendChild(script);
+        document.getElementsByTagName("head")[0].appendChild(script);
     };
     function Tag(id) {
         this.tag = document.getElementById(id);
         if (!this.tag) {
-            console.error('Tag element not found: #' + id);
+            console.error("Tag element not found: #" + id);
             return;
         }
-        this.lastContent = '';
+        this.lastContent = "";
         this.isLastContentSaved = false;
     }
     Tag.prototype._handleTemp = function (isTemp) {
         if (this.isLastContentSaved) {
             this.tag.innerHTML = this.lastContent;
-            this.lastContent = '';
+            this.lastContent = "";
             this.isLastContentSaved = false;
         }
         if (isTemp) {
@@ -497,11 +518,11 @@ limitations under the License.
     };
     Tag.prototype.prepend = function (content, isTemp) {
         this._handleTemp(isTemp);
-        this.tag.insertAdjacentHTML('afterbegin', content);
+        this.tag.insertAdjacentHTML("afterbegin", content);
     };
     Tag.prototype.append = function (content, isTemp) {
         this._handleTemp(isTemp);
-        this.tag.insertAdjacentHTML('beforeend', content);
+        this.tag.insertAdjacentHTML("beforeend", content);
     };
     Tag.prototype.remove = function () {
         if (this.tag && this.tag.parentNode) {
@@ -518,7 +539,7 @@ limitations under the License.
         };
         this.watchers = {};
         this.mutationDepth = 0;
-    };
+    }
     TagX.prototype.isMutating = function() {
         return this.mutationDepth > 0;
     };
@@ -568,8 +589,8 @@ limitations under the License.
             var el = elements[i];
             if (el.hasAttribute("x-on-click")) {
                 (function(el) {
-                    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', 0);
-                    var propagate = !el.hasAttribute('x-no-prop');
+                    if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", 0);
+                    var propagate = !el.hasAttribute("x-no-prop");
                     if (!el.onkeydown) {
                         el.onkeydown = function(e) {
                             e = e || window.event;
@@ -634,11 +655,11 @@ limitations under the License.
                 (function(el) {
                     var keys = (el.getAttribute("x-on-key")).toLowerCase().split(/\s+/);
                     var keysLength = keys.length;
-                    var keysObj = {}
+                    var keysObj = {};
                     for (var j = 0; j < keysLength; j++) {
                         keysObj[keys[j]] = true;
                     }
-                    var propagate = !el.hasAttribute('x-no-prop');
+                    var propagate = !el.hasAttribute("x-no-prop");
                     el.onkeydown = function(e) {
                         e = e || window.event;
                         var key = that.getComboKey(e);
@@ -702,10 +723,10 @@ limitations under the License.
     };
     TagX.prototype.getComboKey = function (e) {
         var modifiers = [];
-        if (e.ctrlKey) modifiers.push('ctrl');
-        if (e.altKey) modifiers.push('alt');
-        if (e.shiftKey) modifiers.push('shift');
-        return (modifiers.length ? modifiers.join('-') + '-' : '') + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
+        if (e.ctrlKey) modifiers.push("ctrl");
+        if (e.altKey) modifiers.push("alt");
+        if (e.shiftKey) modifiers.push("shift");
+        return (modifiers.length ? modifiers.join("-") + "-" : "") + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
     };
     TagX.prototype.watch = function(key, callback) {
         if (!this.watchers[key]) this.watchers[key] = [];
@@ -795,8 +816,6 @@ limitations under the License.
             "x-var-": {},
             "x-run-": {}};
 
-        var globalRefsLength = this.globalRefs.length;
-
         var mode = "";
         var rules = [];
         var rulesObj = {};
@@ -808,7 +827,7 @@ limitations under the License.
             mode = "!";
             rules = elValue.slice(1).split(/\s+/);
         } else {
-            rules = elValue.split(/\s+/)
+            rules = elValue.split(/\s+/);
         }
 
         var rulesLength = rules.length;
@@ -839,7 +858,7 @@ limitations under the License.
                 var refEl = els[j];
                 var className = refEl.className || "";
                 var classList = className.split(/\s+/);
-                var current = refEl.getAttribute('data-simulated-state') || classList[classList.length - 1];
+                var current = refEl.getAttribute("data-simulated-state") || classList[classList.length - 1];
                 var currentIndex = -1;
                 for (var k = 0; k < states.length; k++) {
                     if (current === states[k]) {
@@ -849,16 +868,16 @@ limitations under the License.
                 }
                 var newState = states[(currentIndex + 1) % states.length] || "_";
                 if (current !== newState) {
-                    refEl.setAttribute('data-simulated-state', newState);
+                    refEl.setAttribute("data-simulated-state", newState);
                     (function(refEl) {
                         setTimeout(function() {
                             var classList = (refEl.className || "").split(/\s+/);
                             var liveState = classList[classList.length - 1];
-                            var simulated = refEl.getAttribute('data-simulated-state');
+                            var simulated = refEl.getAttribute("data-simulated-state");
                             if (simulated && simulated !== liveState) {
                                 classList[classList.length - 1] = simulated;
                                 refEl.className = classList.join(" ");
-                                refEl.removeAttribute('data-simulated-state');
+                                refEl.removeAttribute("data-simulated-state");
                             }
                         }, 16);
                     })(refEl);
@@ -871,7 +890,7 @@ limitations under the License.
             var keyAttr = attrs[i];
             var keyAttrArr = keyAttr.split(".");
             var key = keyAttrArr[0];
-            var attr = keyAttrArr.slice(1).join('.');
+            var attr = keyAttrArr.slice(1).join(".");
             var dataState = el.getAttribute("x-attr-" + keyAttr) || "";
             var states = dataState.split(/\s*\|\s*/);
 
@@ -929,7 +948,7 @@ limitations under the License.
             if (data["x-run-"].hasOwnProperty(key)) {
                 var triggers = data["x-run-"][key].split(/\s+/);
                 var triggersLength = triggers.length;
-                for (k = 0; k < triggersLength; k++) {
+                for (var k = 0; k < triggersLength; k++) {
                     this.run(key, triggers[k]);
                 }
             }
@@ -958,5 +977,23 @@ limitations under the License.
     global.Script = Script;
     global.Tag = Tag;
     global.TagX = TagX;
-    global.uc = true;
+
+    var init = global.init || [];
+    global.init = {
+        push: function (fn) {
+            try {
+                fn();
+            } catch (e) {
+                console.error("init queue error:", e);
+            }
+        }
+    };
+    var initLength = init.length;
+    for (var i = 0; i < initLength; i++) {
+        try {
+            init[i]();
+        } catch (e) {
+            console.error("init queue error:", e);
+        }
+    }
 })();
