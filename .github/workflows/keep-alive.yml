@@ -14,7 +14,7 @@ jobs:
           persist-credentials: false  # Important to avoid using default token with limited perms
 
       - name: Make a dummy change
-        run: echo "Last keep-alive: $(date -u)" >> keepalive.txt
+        run: 'echo "Last keep-alive: $(date -u)" >> keepalive.txt'
 
       - name: Commit and push changes
         run: |
