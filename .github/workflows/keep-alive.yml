@@ -2,7 +2,7 @@ name: Keep repo active
 
 on:
   schedule:
-    - cron: '0 0 1 * *'  # At midnight UTC on the 1st day of every month
+    - cron: '0 0 1 * *'  # Runs at midnight UTC on the 1st day of every month
 
 jobs:
   keep-active:
@@ -11,16 +11,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false  # Important to avoid using default token with limited perms
 
       - name: Make a dummy change
-        run: |
-          echo "Last keep-alive: $(date -u)" >> keepalive.txt
+        run: echo "Last keep-alive: $(date -u)" >> keepalive.txt
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add keepalive.txt
           git commit -m "chore: keep repo active [skip ci]" || echo "No changes to commit"
           git push
