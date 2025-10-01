@@ -869,9 +869,9 @@ limitations under the License.
         var attrsLength = attrs.length;
         for (var i = 0; i < attrsLength; i++) {
             var keyAttr = attrs[i];
-            var keyAttrArr = keyAttr.split("_");
+            var keyAttrArr = keyAttr.split(".");
             var key = keyAttrArr[0];
-            var attr = keyAttrArr.slice(1).join('_');
+            var attr = keyAttrArr.slice(1).join('.');
             var dataState = el.getAttribute("x-attr-" + keyAttr) || "";
             var states = dataState.split(/\s*\|\s*/);
 
