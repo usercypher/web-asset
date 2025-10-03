@@ -867,7 +867,6 @@ limitations under the License.
         };
 
         var focus = el.getAttribute("x-focus");
-        var focusFound = false;
 
         for (var key in this.globalRefs) {
             var els = this.globalRefs[key];
@@ -897,17 +896,14 @@ limitations under the License.
                 for (var k = 0; k < triggersLength; k++) { this.run(key, triggers[k]); }
             }
 
-            if (tabRange.length >= 2) {
-                if (key === tabRange[0]) { this.tab.first = refEl; }
-                if (key === tabRange[1]) { this.tab.last = refEl; }
+            if (elsLength > 0 && tabRange.length >= 2) {
+                if (key === tabRange[0]) { this.tab.first = els[0]; }
+                if (key === tabRange[1]) { this.tab.last = els[0]; }
             }
 
-            if (focus && !focusFound) {
-                if (key === focus) {
-                    var focusRef = refEl;
-                    setTimeout(function() { focusRef.focus(); }, 50);
-                    focusFound = true;
-                }
+            if (elsLength > 0 && focus && key === focus) {
+                var focusRef = els[0];
+                setTimeout(function() { focusRef.focus(); }, 50);
             }
         }
     };
