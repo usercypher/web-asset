@@ -105,7 +105,7 @@
                                 x-tab="-create-appointment-tab-first:-create-appointment-tab-last"
                                 x-attr-window_x-on-key-window-escape="-create-appointment-close"
                                 x-attr-window_x-run--create-appointment-close="x-on-click"
-                                x-attr--create-appointment-close_x-focus="-create-appointment-open-${buttonId}"
+                                x-attr--create-appointment-close.x-focus="-create-appointment-open-${buttonId}"
                                 x-val-appointment_user_id="${userId}"
                                 x-val-appointment_service_id="${slot.service_id}"
                                 x-val-appointment_schedule_id="${slot.schedule_id}"
