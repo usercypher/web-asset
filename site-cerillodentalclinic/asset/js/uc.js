@@ -54,9 +54,7 @@ limitations under the License.
         strReplace: function (s, data) {
             var keys = [];
             for (var k in data) {
-                if (data.hasOwnProperty(k)) {
-                    keys.push(k.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, "\\$&"));
-                }
+                if (data.hasOwnProperty(k)) { keys.push(k.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, "\\$&")); }
             }
             return s.replace(new RegExp(keys.join("|"), "g"), function(matched) {
                 return data[matched];
@@ -96,13 +94,9 @@ limitations under the License.
                 var context = this;
                 var args = arguments;
                 clearTimeout(timer);
-                timer = setTimeout(function () {
-                    callback.apply(context, args);
-                }, time);
+                timer = setTimeout(function () { callback.apply(context, args); }, time);
             }
-            debounced.cancel = function () {
-                clearTimeout(timer);
-            };
+            debounced.cancel = function () { clearTimeout(timer); };
             return debounced;
         },
         throttle: function (callback, time) {
@@ -165,7 +159,7 @@ limitations under the License.
         },
         queryToObject: function(queryString) {
             var query = {};
-            if (!queryString) return query;
+            if (!queryString) { return query; }
             function setDeep(obj, keys, value) {
                 var key = keys.shift();
                 if (keys.length === 0) {
@@ -177,17 +171,16 @@ limitations under the License.
                     } else if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
                         obj[key].push(value);
                     } else {
-                        obj[key] = [obj[key],
-                            value];
+                        obj[key] = [obj[key], value];
                     }
                     return obj;
                 }
                 if (key === "") {
-                    if (Object.prototype.toString.call(obj) !== "[object Array]") obj = [];
-                    if (obj.length === 0 || typeof obj[obj.length - 1] !== "object") obj.push({});
+                    if (Object.prototype.toString.call(obj) !== "[object Array]") { obj = []; }
+                    if (obj.length === 0 || typeof obj[obj.length - 1] !== "object") { obj.push({}); }
                     obj[obj.length - 1] = setDeep(obj[obj.length - 1], keys, value);
                 } else {
-                    if (!obj[key]) obj[key] = {};
+                    if (!obj[key]) { obj[key] = {}; }
                     obj[key] = setDeep(obj[key], keys, value);
                 }
                 return obj;
@@ -195,7 +188,7 @@ limitations under the License.
             var parts = queryString.split("&");
             for (var i = 0; i < parts.length; i++) {
                 var part = parts[i];
-                if (!part) continue;
+                if (!part) { continue; }
                 var kv = part.split("=");
                 var rawKey = decodeURIComponent(kv[0]);
                 var val = kv.length > 1 ? decodeURIComponent(kv[1]): "";
@@ -203,8 +196,11 @@ limitations under the License.
                 var keyRegex = /([^\[\]]+)|(\[\])/g;
                 var match;
                 while ((match = keyRegex.exec(rawKey)) !== null) {
-                    if (match[1]) keys.push(match[1]);
-                    else keys.push("");
+                    if (match[1]) {
+                        keys.push(match[1]);
+                    } else {
+                        keys.push("");
+                    }
                 }
                 query = setDeep(query, keys, val);
             }
@@ -215,9 +211,7 @@ limitations under the License.
         this.url = baseUrl || (global.location && global.location.href) || "";
         var parts = this.url.split("#");
         this.hash = "";
-        if (parts[1]) {
-            this.hash = parts[1];
-        }
+        if (parts[1]) { this.hash = parts[1]; }
         parts = parts[0].split("?");
         this.base = parts[0];
         this.query = parts[1] ? Utils.queryToObject(parts[1]): {};
@@ -274,18 +268,14 @@ limitations under the License.
             this.nextCallback(this, new Response( {
                 "status": 200,
                 "responseText": cached,
-                "getAllResponseHeaders": function () {
-                    return "X-Cache: HIT";
-                }
+                "getAllResponseHeaders": function () { return "X-Cache: HIT"; }
             }));
             return;
         }
         this.xhr.open(method, url, true);
         this.xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         for (var key in headers) {
-            if (headers.hasOwnProperty(key)) {
-                this.xhr.setRequestHeader(key, headers[key]);
-            }
+            if (headers.hasOwnProperty(key)) { this.xhr.setRequestHeader(key, headers[key]); }
         }
         if (timeout !== -1) {
             timeoutId = setTimeout(function () {
@@ -294,21 +284,17 @@ limitations under the License.
                 self.nextCallback(self, new Response( {
                     "status": 408,
                     "responseText": "",
-                    "getAllResponseHeaders": function () {
-                        return "X-Timeout: true";
-                    }
+                    "getAllResponseHeaders": function () { return "X-Timeout: true"; }
                 }));
             }, timeout * 1000);
         }
         this.xhr.onreadystatechange = function () {
             if (self.xhr.readyState === 4) {
-                if (typeof timeoutId !== "undefined") clearTimeout(timeoutId);
+                if (typeof timeoutId !== "undefined") { clearTimeout(timeoutId); }
                 var response = new Response(self.xhr);
                 if (response.code >= 200 && response.code < 300) {
                     if (response.content) {
-                        if (self.cacheEnabled) {
-                            self.setCacheEntry(url, response.content);
-                        }
+                        if (self.cacheEnabled) { self.setCacheEntry(url, response.content); }
                     }
                 }
                 self.nextCallback(self, response);
@@ -365,9 +351,7 @@ limitations under the License.
     Request.prototype.setCacheEntry = function (key, value) {
         var now = new Date().getTime();
         var oldEntry = this.cache[key];
-        if (oldEntry) {
-            this.cacheTotalSize -= Utils.strSizeOf(oldEntry.value);
-        }
+        if (oldEntry) { this.cacheTotalSize -= Utils.strSizeOf(oldEntry.value); }
         this.cache[key] = {
             value: value,
             timestamp: now
@@ -378,9 +362,7 @@ limitations under the License.
     };
     Request.prototype.getCacheEntry = function (key) {
         var entry = this.cache[key];
-        if (!entry) {
-            return null;
-        }
+        if (!entry) { return null; }
         var now = new Date().getTime();
         if (now - entry.timestamp > this.cacheTTL && this.cacheTTL !== -1) {
             delete this.cache[key];
@@ -392,14 +374,10 @@ limitations under the License.
         delete this.cache[key];
     };
     Request.prototype.cleanCache = function () {
-        if (this.cacheTotalSize <= this.cacheSizeLimit) {
-            return;
-        }
+        if (this.cacheTotalSize <= this.cacheSizeLimit) { return; }
         var keys = [];
         for (var key in this.cache) {
-            if (this.cache.hasOwnProperty(key)) {
-                keys.push(key);
-            }
+            if (this.cache.hasOwnProperty(key)) { keys.push(key); }
         }
         while (this.cacheTotalSize > this.cacheSizeLimit && keys.length > 0 && this.cacheSizeLimit !== -1) {
             var oldestKey = keys.shift();
@@ -428,7 +406,7 @@ limitations under the License.
             var headerPairs = headerStr.split(/\r?\n/);
             for (var i = 0; i < headerPairs.length; i++) {
                 var line = headerPairs[i];
-                if (line === "") continue;
+                if (line === "") { continue; }
                 var colonPos = -1;
                 for (var j = 0; j < line.length; j++) {
                     if (line.charAt(j) === ":") {
@@ -436,10 +414,10 @@ limitations under the License.
                         break;
                     }
                 }
-                if (colonPos === -1) continue;
+                if (colonPos === -1) { continue; }
 
                 var key = Utils.trim(line.substring(0, colonPos)).toLowerCase();
-                if (key === "") continue;
+                if (key === "") { continue; }
                 var value = Utils.trim(line.substring(colonPos + 1));
                 this.headers[key] = value;
             }
@@ -457,7 +435,11 @@ limitations under the License.
         var loaded = self.loadedScripts[src];
 
         if (loaded === true) {
-            if (callback) (function(cb) { setTimeout(function () { cb(false); }, 0); })(callback);
+            if (callback) {
+                (function(cb) {
+                    setTimeout(function () { cb(false); }, 0);
+                })(callback);
+            }
             return;
         }
 
@@ -475,7 +457,11 @@ limitations under the License.
             if (!script.readyState || (/loaded|complete/).test(script.readyState)) {
                 var cbs = self.loadedScripts[src];
                 for (var i = 0; i < cbs.length; i++) {
-                    if (typeof cbs[i] === "function") (function(cb) { setTimeout(function () { cb(true); }, 0); })(cbs[i]);
+                    if (typeof cbs[i] === "function") {
+                        (function(cb) {
+                            setTimeout(function () { cb(true); }, 0);
+                        })(cbs[i]);
+                    }
                 }
                 self.loadedScripts[src] = true;
 
@@ -484,9 +470,7 @@ limitations under the License.
         };
 
         script.onerror = function() {
-            if (console && console.error) {
-                console.error("Failed to load script: " + src);
-            }
+            if (console && console.error) { console.error("Failed to load script: " + src); }
             delete self.loadedScripts[src];
         };
 
@@ -525,9 +509,7 @@ limitations under the License.
         this.tag.insertAdjacentHTML("beforeend", content);
     };
     Tag.prototype.remove = function () {
-        if (this.tag && this.tag.parentNode) {
-            this.tag.parentNode.removeChild(this.tag);
-        }
+        if (this.tag && this.tag.parentNode) { this.tag.parentNode.removeChild(this.tag); }
     };
     function TagX() {
         this.globalRefs = {};
@@ -556,7 +538,7 @@ limitations under the License.
                 if (attr.name.substr(0, 6) === "x-ref-") {
                     var key = attr.name.slice(6);
                     var isDuplicate = false;
-                    if (!this.globalRefs[key]) this.globalRefs[key] = [];
+                    if (!this.globalRefs[key]) { this.globalRefs[key] = []; }
                     var globalRefsLength = this.globalRefs[key].length;
                     for (var k = 0; k < globalRefsLength; k++) {
                         if (this.globalRefs[key][k] === el) {
@@ -564,7 +546,7 @@ limitations under the License.
                             break;
                         }
                     }
-                    if (!isDuplicate) this.globalRefs[key].push(el);
+                    if (!isDuplicate) { this.globalRefs[key].push(el); }
                     if (!this.globalVars.hasOwnProperty(key)) {
                         if (el.tagName === "INPUT" && (el.type === "checkbox" || el.type === "radio")) {
                             this.globalVars[key] = el.checked;
@@ -575,12 +557,8 @@ limitations under the License.
                 }
             }
             if (tabRange.length >= 2) {
-                if (el.hasAttribute("x-ref-" + tabRange[0])) {
-                    this.tab.first = el;
-                }
-                if (el.hasAttribute("x-ref-" + tabRange[1])) {
-                    this.tab.last = el;
-                }
+                if (el.hasAttribute("x-ref-" + tabRange[0])) { this.tab.first = el; }
+                if (el.hasAttribute("x-ref-" + tabRange[1])) { this.tab.last = el; }
             }
         }
 
@@ -589,54 +567,42 @@ limitations under the License.
             var el = elements[i];
             if (el.hasAttribute("x-on-click")) {
                 (function(el) {
-                    if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", 0);
                     var propagate = !el.hasAttribute("x-no-prop");
+                    if (!el.hasAttribute("tabindex")) { el.setAttribute("tabindex", 0); }
                     if (!el.onkeydown) {
                         el.onkeydown = function(e) {
                             e = e || window.event;
                             if (e.key === "Enter" || (e.keyCode || e.which) === 13) {
-                                if (!propagate) {
-                                    that.stopPropagation(e);
-                                }
+                                if (!propagate) { that.stopPropagation(e); }
                                 that.processElement(el, el.getAttribute("x-on-click"));
                             }
                         };
                     }
                     el.onclick = function(e) {
                         e = e || window.event;
-                        if (!propagate) {
-                            that.stopPropagation(e);
-                        }
+                        if (!propagate) { that.stopPropagation(e); }
                         that.processElement(el, el.getAttribute("x-on-click"));
                     };
                 })(el);
             }
             if (el.hasAttribute("x-on-enter")) {
                 (function(el) {
-                    el.onmouseenter = function() {
-                        that.processElement(el, el.getAttribute("x-on-enter"));
-                    };
+                    el.onmouseenter = function() { that.processElement(el, el.getAttribute("x-on-enter")); };
                 })(el);
             }
             if (el.hasAttribute("x-on-leave")) {
                 (function(el) {
-                    el.onmouseleave = function() {
-                        that.processElement(el, el.getAttribute("x-on-leave"));
-                    };
+                    el.onmouseleave = function() { that.processElement(el, el.getAttribute("x-on-leave")); };
                 })(el);
             }
             if (el.hasAttribute("x-on-focus")) {
                 (function(el) {
-                    el.onfocus = function() {
-                        that.processElement(el, el.getAttribute("x-on-focus"));
-                    };
+                    el.onfocus = function() { that.processElement(el, el.getAttribute("x-on-focus")); };
                 })(el);
             }
             if (el.hasAttribute("x-on-blur")) {
                 (function(el) {
-                    el.onblur = function() {
-                        that.processElement(el, el.getAttribute("x-on-blur"));
-                    };
+                    el.onblur = function() { that.processElement(el, el.getAttribute("x-on-blur")); };
                 })(el);
             }
             if (el.hasAttribute("x-on-input")) {
@@ -645,7 +611,7 @@ limitations under the License.
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
-                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") el.setAttribute(n, this.value);
+                            if (n.substr(0, 8) === "x-cycle-" || n.substr(0, 7) === "x-attr-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") { el.setAttribute(n, this.value); }
                         }
                         that.processElement(el, el.getAttribute("x-on-input"));
                     };
@@ -653,20 +619,16 @@ limitations under the License.
             }
             if (el.hasAttribute("x-on-key")) {
                 (function(el) {
+                    var propagate = !el.hasAttribute("x-no-prop");
                     var keys = (el.getAttribute("x-on-key")).toLowerCase().split(/\s+/);
                     var keysLength = keys.length;
                     var keysObj = {};
-                    for (var j = 0; j < keysLength; j++) {
-                        keysObj[keys[j]] = true;
-                    }
-                    var propagate = !el.hasAttribute("x-no-prop");
+                    for (var j = 0; j < keysLength; j++) { keysObj[keys[j]] = true; }
                     el.onkeydown = function(e) {
                         e = e || window.event;
                         var key = that.getComboKey(e);
                         if (keysObj[key]) {
-                            if (!propagate) {
-                                that.stopPropagation(e);
-                            }
+                            if (!propagate) { that.stopPropagation(e); }
                             that.preventDefault(e);
                             that.processElement(el, el.getAttribute("x-on-key-" + key));
                         }
@@ -678,7 +640,7 @@ limitations under the License.
                 var keysLength = keys.length;
                 for (var j = 0; j < keysLength; j++) {
                     var key = keys[j];
-                    if (!that.globalKeys[key]) that.globalKeys[key] = [];
+                    if (!that.globalKeys[key]) { that.globalKeys[key] = []; }
                     that.globalKeys[key].push(el);
                 }
             }
@@ -690,9 +652,7 @@ limitations under the License.
             if (that.globalKeys[key]) {
                 var keys = that.globalKeys[key];
                 var keysLength = keys.length;
-                for (var i = 0; i < keysLength; i++) {
-                    that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key));
-                }
+                for (var i = 0; i < keysLength; i++) { that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key)); }
             }
             if (key === "tab") {
                 if (e.shiftKey && document.activeElement === that.tab.first) {
@@ -723,13 +683,13 @@ limitations under the License.
     };
     TagX.prototype.getComboKey = function (e) {
         var modifiers = [];
-        if (e.ctrlKey) modifiers.push("ctrl");
-        if (e.altKey) modifiers.push("alt");
-        if (e.shiftKey) modifiers.push("shift");
+        if (e.ctrlKey) { modifiers.push("ctrl"); }
+        if (e.altKey) { modifiers.push("alt"); }
+        if (e.shiftKey) { modifiers.push("shift"); }
         return (modifiers.length ? modifiers.join("-") + "-" : "") + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
     };
     TagX.prototype.watch = function(key, callback) {
-        if (!this.watchers[key]) this.watchers[key] = [];
+        if (!this.watchers[key]) { this.watchers[key] = []; }
         this.watchers[key].push(callback);
     };
     TagX.prototype.getRefs = function(key) {
@@ -743,21 +703,15 @@ limitations under the License.
         var valOld = this.globalVars[key];
         this.globalVars[key] = value;
         if (this.watchers[key]) {
-            for (var w = 0; w < this.watchers[key].length; w++) {
-                this.watchers[key][w](valOld, value, el);
-            }
+            for (var w = 0; w < this.watchers[key].length; w++) { this.watchers[key][w](valOld, value, el); }
         }
         if (this.watchers["*"]) {
-            for (var w = 0; w < this.watchers["*"].length; w++) {
-                this.watchers["*"][w](key, valOld, value, el);
-            }
+            for (var w = 0; w < this.watchers["*"].length; w++) { this.watchers["*"][w](key, valOld, value, el); }
         }
     };
     TagX.prototype.run = function(key, trigger) {
         var refs = this.getRefs(key);
-        for (var i = 0; i < refs.length; i++) {
-            this.processElement(refs[i], refs[i].getAttribute(trigger));
-        }
+        for (var i = 0; i < refs.length; i++) { this.processElement(refs[i], refs[i].getAttribute(trigger)); }
     };
     TagX.prototype.clean = function() {
         this.mutationDepth++;
@@ -767,14 +721,16 @@ limitations under the License.
             var elsLength = els.length;
             var filteredEls = [];
 
-            for (var i = 0; i < elsLength; i++) if (body.contains(els[i])) filteredEls.push(els[i]);
+            for (var i = 0; i < elsLength; i++) {
+                if (body.contains(els[i])) { filteredEls.push(els[i]); }
+            }
 
             if (filteredEls.length > 0) {
                 this.globalRefs[key] = filteredEls;
             } else {
                 delete this.globalRefs[key];
                 delete this.globalVars[key];
-                if (this.watchers && this.watchers[key]) delete this.watchers[key];
+                if (this.watchers && this.watchers[key]) { delete this.watchers[key]; }
             }
         }
         for (var key in this.globalKeys) {
@@ -782,7 +738,9 @@ limitations under the License.
             var elsLength = els.length;
             var filteredEls = [];
 
-            for (var i = 0; i < elsLength; i++) if (body.contains(els[i])) filteredEls.push(els[i]);
+            for (var i = 0; i < elsLength; i++) {
+                if (body.contains(els[i])) { filteredEls.push(els[i]); }
+            }
 
             if (filteredEls.length > 0) {
                 this.globalKeys[key] = filteredEls;
@@ -793,19 +751,15 @@ limitations under the License.
         this.mutationDepth--;
     };
     TagX.prototype.processElement = function(el, elValue) {
-        if (this.mutationDepth > 0) return;
+        if (this.mutationDepth > 0) { return; }
         var that = this;
         if (this.isProcessing) {
-            return setTimeout(function () {
-                that.processElement(el, elValue);
-            }, 1);
+            return setTimeout(function () { that.processElement(el, elValue); }, 4);
         }
         this.isProcessing = true;
         setTimeout(function () {
             that._processElement(el, elValue);
-            setTimeout(function () {
-                that.isProcessing = false;
-            }, 1);
+            that.isProcessing = false;
         }, 0);
     };
     TagX.prototype._processElement = function(el, elValue) {
@@ -831,20 +785,14 @@ limitations under the License.
         }
 
         var rulesLength = rules.length;
-        for (var i = 0; i < rulesLength; i++) rulesObj[rules[i]] = true;
+        for (var i = 0; i < rulesLength; i++) { rulesObj[rules[i]] = true; }
 
         var elAttributesLength = el.attributes.length;
         for (var i = 0; i < elAttributesLength; i++) {
             var attr = el.attributes[i];
-            if (attr.name.substr(0, 8) === "x-cycle-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(8))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(8))))) {
-                cycles.push(attr.name.slice(8));
-            }
-            if (attr.name.substr(0, 7) === "x-attr-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(7))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(7))))) {
-                attrs.push(attr.name.slice(7));
-            }
-            if ((attr.name.substr(0, 6) === "x-val-" || attr.name.substr(0, 6) === "x-var-" || attr.name.substr(0, 6) === "x-run-") && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) {
-                data[attr.name.substr(0, 6)][attr.name.slice(6)] = attr.value;
-            }
+            if (attr.name.substr(0, 8) === "x-cycle-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(8))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(8))))) { cycles.push(attr.name.slice(8)); }
+            if (attr.name.substr(0, 7) === "x-attr-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(7))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(7))))) { attrs.push(attr.name.slice(7)); }
+            if ((attr.name.substr(0, 6) === "x-val-" || attr.name.substr(0, 6) === "x-var-" || attr.name.substr(0, 6) === "x-run-") && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) { data[attr.name.substr(0, 6)][attr.name.slice(6)] = attr.value; }
         }
 
         var cyclesLength = cycles.length;
@@ -879,7 +827,7 @@ limitations under the License.
                                 refEl.className = classList.join(" ");
                                 refEl.removeAttribute("data-simulated-state");
                             }
-                        }, 16);
+                        }, 4);
                     })(refEl);
                 }
             }
@@ -908,7 +856,7 @@ limitations under the License.
                 }
                 var newState = states[(currentIndex + 1) % states.length] || "_";
                 var oldState = refEl.getAttribute(attr);
-                if (oldState != newState) refEl.setAttribute(attr, newState);
+                if (oldState != newState) { refEl.setAttribute(attr, newState); }
             }
         }
 
@@ -941,29 +889,23 @@ limitations under the License.
                 }
             }
 
-            if (data["x-var-"].hasOwnProperty(key)) {
-                this.setVar(key, data["x-var-"][key], el);
-            }
+            if (data["x-var-"].hasOwnProperty(key)) { this.setVar(key, data["x-var-"][key], el); }
 
             if (data["x-run-"].hasOwnProperty(key)) {
                 var triggers = data["x-run-"][key].split(/\s+/);
                 var triggersLength = triggers.length;
-                for (var k = 0; k < triggersLength; k++) {
-                    this.run(key, triggers[k]);
-                }
+                for (var k = 0; k < triggersLength; k++) { this.run(key, triggers[k]); }
             }
 
             if (tabRange.length >= 2) {
-                if (key === tabRange[0]) this.tab.first = refEl;
-                if (key === tabRange[1]) this.tab.last = refEl;
+                if (key === tabRange[0]) { this.tab.first = refEl; }
+                if (key === tabRange[1]) { this.tab.last = refEl; }
             }
 
             if (focus && !focusFound) {
                 if (key === focus) {
                     var focusRef = refEl;
-                    setTimeout(function() {
-                        focusRef.focus();
-                    }, 50);
+                    setTimeout(function() { focusRef.focus(); }, 50);
                     focusFound = true;
                 }
             }
