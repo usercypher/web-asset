@@ -429,54 +429,51 @@ limitations under the License.
     function Script() {
         this.loadedScripts = {};
     }
-    Script.prototype.load = function(options, callback) {
-        var self = this;
-        var src = options.src;
-        var loaded = self.loadedScripts[src];
+    Script.prototype.load = function(urls, successCallback, failureCallback) {
+        failureCallback = failureCallback || function () {};
+        var that = this;
+        var toLoad = [];
+        var loadedCount = 0;
+        var hasError = false;
 
-        if (loaded === true) {
-            if (callback) {
-                (function(cb) {
-                    setTimeout(function () { cb(false); }, 0);
-                })(callback);
+        for (var i = 0; i < urls.length; i++) {
+            if (!that.loadedScripts[urls[i]]) {
+                toLoad.push(urls[i]);
+            } else {
+                loadedCount++;
             }
+        }
+        if (loadedCount === urls.length) {
+            successCallback();
             return;
         }
-
-        if (loaded && loaded.push) {
-            loaded.push(callback);
-            return;
+        function onLoad() {
+            loadedCount++;
+            if (loadedCount === urls.length && !hasError) { successCallback(); }
         }
-
-        self.loadedScripts[src] = [callback];
-
-        var script = document.createElement("script");
-        for (var attr in options) { 
-            if (options.hasOwnProperty(attr)) { script.setAttribute(attr, options[attr]); }
+        function onError() {
+            if (!hasError) {
+                hasError = true;
+                failureCallback();
+            }
         }
-
-        script.onload = script.onreadystatechange = function() {
-            if (!script.readyState || (/loaded|complete/).test(script.readyState)) {
-                var cbs = self.loadedScripts[src];
-                for (var i = 0; i < cbs.length; i++) {
-                    if (typeof cbs[i] === "function") {
-                        (function(cb) {
-                            setTimeout(function () { cb(true); }, 0);
-                        })(cbs[i]);
+        for (var j = 0; j < toLoad.length; j++) {
+            (function(url, that, onLoad, onError) {
+                var script = document.createElement("script");
+                script.setAttribute("type", "text/javascript");
+                script.setAttribute("src", url);
+                script.setAttribute("defer", "");
+                script.onload = script.onreadystatechange = function () {
+                    if (!that.loadedScripts[url] && (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete')) {
+                        script.onload = script.onreadystatechange = null;
+                        that.loadedScripts[url] = true;
+                        onLoad();
                     }
-                }
-                self.loadedScripts[src] = true;
-
-                script.onload = script.onreadystatechange = null;
-            }
-        };
-
-        script.onerror = function() {
-            if (console && console.error) { console.error("Failed to load script: " + src); }
-            delete self.loadedScripts[src];
-        };
-
-        document.getElementsByTagName("head")[0].appendChild(script);
+                };
+                script.onerror = onError;
+                document.getElementsByTagName("head")[0].appendChild(script);
+            })(toLoad[j], that, onLoad, onError);
+        }
     };
     function Tag(id) {
         this.tag = document.getElementById(id);
