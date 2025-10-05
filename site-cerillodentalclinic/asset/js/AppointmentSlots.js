@@ -3,7 +3,7 @@
 
     function AppointmentSlots() {}
 
-    AppointmentSlots.prototype.init = function(allSlots, userId) {
+    AppointmentSlots.prototype.init = function(allSlots, userId, urlProfile) {
         const serviceButtons = document.getElementById('service-buttons');
         const dateButtons = document.getElementById('date-buttons');
         const slotsContainer = document.getElementById('slots-container');
@@ -87,12 +87,13 @@
                     const row = document.createElement('tr');
                     const formattedTimeStart = formatTime(slot.start);
                     const formattedTimeEnd = formatTime(slot.end);
+                    const urlProfileProcessed = Utils.strReplace(urlProfile, {":id" : slot.doctor_id});
                     
                     row.innerHTML = `
                         <td>${formattedTimeStart} - ${formattedTimeEnd}</td>
                         <td>${slot.service_duration} min</td>
                         <td>${slot.service_price}</td>
-                        <td>${slot.doctor_name}</td>
+                        <td><a href="${urlProfileProcessed}">${slot.doctor_name}</a></td>
                         <td>
                             <button 
                                 class="button"
