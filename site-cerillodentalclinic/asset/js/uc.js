@@ -560,11 +560,11 @@ limitations under the License.
             if (tabRange.length >= 2) {
                 if (el.hasAttribute("x-ref-" + tabRange[0])) {
                     this.tab.first = el;
-                    this.tab.default_first = key;
+                    this.tab.default_first = tabRange[0];
                 }
                 if (el.hasAttribute("x-ref-" + tabRange[1])) {
                     this.tab.last = el;
-                    this.tab.default_last = key;
+                    this.tab.default_last = tabRange[1];
                 }
             }
         }
@@ -618,7 +618,7 @@ limitations under the License.
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
-                            if (n.substr(0, 7) === "x-attr-" || n.substr(0, 8) === "x-cycle-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") { el.setAttribute(n, this.value); }
+                            if (n.substr(0, 6) === "x-set-" || n.substr(0, 8) === "x-cycle-" || n.substr(0, 6) === "x-val-" || n.substr(0, 6) === "x-var-" || n.substr(0, 6) === "x-run-") { el.setAttribute(n, this.value); }
                         }
                         that.processElement(el, el.getAttribute("x-on-input"));
                     };
@@ -770,13 +770,6 @@ limitations under the License.
         }, 0);
     };
     TagX.prototype._processElement = function(el, elValue) {
-        var cycles = [];
-        var attrs = [];
-        var data = {
-            "x-val-": {},
-            "x-var-": {},
-            "x-run-": {}};
-
         var mode = "";
         var rules = [];
         var rulesObj = {};
@@ -797,73 +790,93 @@ limitations under the License.
         var elAttributesLength = el.attributes.length;
         for (var i = 0; i < elAttributesLength; i++) {
             var attr = el.attributes[i];
-            if (attr.name.substr(0, 7) === "x-attr-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(7))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(7))))) { attrs.push(attr.name.slice(7)); }
-            if (attr.name.substr(0, 8) === "x-cycle-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(8))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(8))))) { cycles.push(attr.name.slice(8)); }
-            if ((attr.name.substr(0, 6) === "x-val-" || attr.name.substr(0, 6) === "x-var-" || attr.name.substr(0, 6) === "x-run-") && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) { data[attr.name.substr(0, 6)][attr.name.slice(6)] = attr.value; }
-        }
-
-        var attrsLength = attrs.length;
-        for (var i = 0; i < attrsLength; i++) {
-            var keyAttr = attrs[i];
-            var keyAttrArr = keyAttr.split(".");
-            var key = keyAttrArr[0];
-            var attr = keyAttrArr.slice(1).join(".");
-            var dataState = el.getAttribute("x-attr-" + keyAttr) || "";
-            var states = dataState.split(/\s*\|\s*/);
-
-            var els = this.globalRefs[key] || [];
-            var elsLength = els.length;
-            for (var j = 0; j < elsLength; j++) {
-                var refEl = els[j];
-                var current = refEl.getAttribute(attr);
-                var currentIndex = -1;
-                for (var k = 0; k < states.length; k++) {
-                    if (current === states[k]) {
-                        currentIndex = k;
-                        break;
+            if (attr.name.substr(0, 8) === "x-cycle-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(8))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(8))))) {
+                var key = attr.name.slice(8);
+                var dataState = attr.value || "";
+                var states = dataState.split(/\s+/);
+                var els = (key == "") ? [el] : (this.globalRefs[key] || []);
+                var elsLength = els.length;
+                for (var j = 0; j < elsLength; j++) {
+                    var refEl = els[j];
+                    var className = refEl.className || "";
+                    var classList = className.split(/\s+/);
+                    var current = refEl.getAttribute("data-simulated-state") || classList[classList.length - 1];
+                    var currentIndex = -1;
+                    for (var k = 0; k < states.length; k++) {
+                        if (current === states[k]) {
+                            currentIndex = k;
+                            break;
+                        }
+                    }
+                    var newState = states[(currentIndex + 1) % states.length] || "_";
+                    if (current !== newState) {
+                        refEl.setAttribute("data-simulated-state", newState);
+                        (function(refEl) {
+                            setTimeout(function() {
+                                var classList = (refEl.className || "").split(/\s+/);
+                                var liveState = classList[classList.length - 1];
+                                var simulated = refEl.getAttribute("data-simulated-state");
+                                if (simulated && simulated !== liveState) {
+                                    classList[classList.length - 1] = simulated;
+                                    refEl.className = classList.join(" ");
+                                    refEl.removeAttribute("data-simulated-state");
+                                }
+                            }, 4);
+                        })(refEl);
                     }
                 }
-                var newState = states[(currentIndex + 1) % states.length] || "_";
-                var oldState = refEl.getAttribute(attr);
-                if (oldState != newState) { refEl.setAttribute(attr, newState); }
             }
-        }
 
-        var cyclesLength = cycles.length;
-        for (var i = 0; i < cyclesLength; i++) {
-            var key = cycles[i];
-            var dataState = el.getAttribute("x-cycle-" + key) || "";
-            var states = dataState.split(/\s+/);
-            var els = this.globalRefs[key] || [];
-            var elsLength = els.length;
-            for (var j = 0; j < elsLength; j++) {
-                var refEl = els[j];
-                var className = refEl.className || "";
-                var classList = className.split(/\s+/);
-                var current = refEl.getAttribute("data-simulated-state") || classList[classList.length - 1];
-                var currentIndex = -1;
-                for (var k = 0; k < states.length; k++) {
-                    if (current === states[k]) {
-                        currentIndex = k;
-                        break;
+            if (attr.name.substr(0, 6) === "x-set-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) {
+                var keySets = attr.name.slice(6);
+                var keySetsArr = keySets.split(".");
+                var key = keySetsArr[0];
+                var set = keySetsArr.slice(1).join(".");
+                var dataState = attr.value || "";
+                var states = dataState.split(/\s*\|\s*/);
+                var els = (key == "") ? [el] : (this.globalRefs[key] || []);
+                var elsLength = els.length;
+                for (var j = 0; j < elsLength; j++) {
+                    var refEl = els[j];
+                    var current = refEl.getAttribute(set);
+                    var currentIndex = -1;
+                    for (var k = 0; k < states.length; k++) {
+                        if (current === states[k]) {
+                            currentIndex = k;
+                            break;
+                        }
+                    }
+                    var newState = states[(currentIndex + 1) % states.length] || "_";
+                    if (current != newState) { refEl.setAttribute(set, newState); }
+                }
+            }
+
+            if (attr.name.substr(0, 6) === "x-val-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) {
+                var key = attr.name.slice(6);
+                var els = (key == "") ? [el] : (this.globalRefs[key] || []);
+                var elsLength = els.length;
+                for (var j = 0; j < elsLength; j++) {
+                    var refEl = els[j];
+                    var val = attr.value;
+                    var tag = refEl.tagName.toUpperCase();
+                    if ((tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") && val != refEl.value) {
+                        if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
+                            refEl.checked = (val === true || val === "true" || val === "1");
+                        } else if (val != refEl.value) {
+                            refEl.value = val;
+                        }
+                    } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
+                        refEl.innerHTML = Utils.htmlEncode(val);
                     }
                 }
-                var newState = states[(currentIndex + 1) % states.length] || "_";
-                if (current !== newState) {
-                    refEl.setAttribute("data-simulated-state", newState);
-                    (function(refEl) {
-                        setTimeout(function() {
-                            var classList = (refEl.className || "").split(/\s+/);
-                            var liveState = classList[classList.length - 1];
-                            var simulated = refEl.getAttribute("data-simulated-state");
-                            if (simulated && simulated !== liveState) {
-                                classList[classList.length - 1] = simulated;
-                                refEl.className = classList.join(" ");
-                                refEl.removeAttribute("data-simulated-state");
-                            }
-                        }, 4);
-                    })(refEl);
-                }
+            }
+
+            if (attr.name.substr(0, 6) === "x-var-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) { this.setVar(attr.name.slice(6), attr.value, el); }
+
+            if (attr.name.substr(0, 6) === "x-run-" && (mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(attr.name.slice(6))) || (mode === "" && rulesObj.hasOwnProperty(attr.name.slice(6))))) {
+                var triggers = attr.value.split(/\s+/);
+                var triggersLength = triggers.length;
+                for (var j = 0; j < triggersLength; j++) { this.run(attr.name.slice(6), triggers[j]); }
             }
         }
 
@@ -885,39 +898,6 @@ limitations under the License.
             (function(focusRef) {
                 setTimeout(function() { focusRef.focus(); }, 50);
             })(this.globalRefs[focus][0]);
-        }
-
-        for (var key in data["x-val-"]) {
-            if (this.globalRefs.hasOwnProperty(key) && data["x-val-"].hasOwnProperty(key)) {
-                var els = this.globalRefs[key];
-                var elsLength = els.length;
-                for (var i = 0; i < elsLength; i++) {
-                    var refEl = els[i];
-                    var val = data["x-val-"][key];
-                    var tag = refEl.tagName.toUpperCase();
-                    if ((tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") && val != refEl.value) {
-                        if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
-                            refEl.checked = (val === true || val === "true" || val === "1");
-                        } else if (val != refEl.value) {
-                            refEl.value = val;
-                        }
-                    } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
-                        refEl.innerHTML = Utils.htmlEncode(val);
-                    }
-                }
-            }
-        }
-
-        for (var key in data["x-var-"]) {
-            if (this.globalRefs.hasOwnProperty(key) && data["x-var-"].hasOwnProperty(key)) { this.setVar(key, data["x-var-"][key], el); }
-        }
-
-        for (var key in data["x-run-"]) {
-            if (this.globalRefs.hasOwnProperty(key) && data["x-run-"].hasOwnProperty(key)) {
-                var triggers = data["x-run-"][key].split(/\s+/);
-                var triggersLength = triggers.length;
-                for (var j = 0; j < triggersLength; j++) { this.run(key, triggers[j]); }
-            }
         }
     };
 
