@@ -905,10 +905,8 @@ limitations under the License.
         var focus = el.getAttribute("x-focus");
         if (focus && this.globalRefs[focus]) {
             if (this.isFocusing) clearTimeout(this.isFocusing);
-            (function(focusRef, that) {
-                focusRef.focus();
-                if (document.activeElement !== focusRef) { that.isFocusing = setTimeout(function() { focusRef.focus(); }, 300); }
-            })(this.globalRefs[focus][0], this);
+            var focusRef = this.globalRefs[focus][0];
+            this.isFocusing = setTimeout(function() { focusRef.focus(); }, 50);
         }
     };
 
