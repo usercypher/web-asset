@@ -571,62 +571,44 @@ limitations under the License.
         var that = this;
         for (var i = 0; i < elementsLength; i++) {
             var el = elements[i];
-            if (el.hasAttribute("x-on-click")) {
-                (function(el, that) {
-                    var propagate = !el.hasAttribute("x-no-prop");
+            (function(el, that) {
+                if (el.hasAttribute("x-on-click")) {
                     if (!el.hasAttribute("tabindex")) { el.setAttribute("tabindex", 0); }
                     if (!el.onkeydown) {
                         el.onkeydown = function(e) {
                             e = e || window.event;
-                            if (e.key === "Enter" || (e.keyCode || e.which) === 13) {
-                                if (!propagate) { that.stopPropagation(e); }
-                                that.processElement(el, el.getAttribute("x-on-click"));
-                            }
+                            if (e.key === "Enter" || (e.keyCode || e.which) === 13) { return that.processElement(el, el.getAttribute("x-on-click"), e); }
                         };
                     }
-                    el.onclick = function(e) {
-                        e = e || window.event;
-                        if (!propagate) { that.stopPropagation(e); }
-                        that.processElement(el, el.getAttribute("x-on-click"));
-                    };
-                })(el, that);
-            }
-            if (el.hasAttribute("x-on-enter")) {
-                (function(el, that) {
+                    el.onclick = function(e) { return that.processElement(el, el.getAttribute("x-on-click"), e || window.event); };
+                }
+                if (el.hasAttribute("x-on-enter")) {
                     el.onmouseenter = function() { that.processElement(el, el.getAttribute("x-on-enter")); };
-                })(el, that);
-            }
-            if (el.hasAttribute("x-on-leave")) {
-                (function(el, that) {
+                }
+                if (el.hasAttribute("x-on-leave")) {
                     el.onmouseleave = function() { that.processElement(el, el.getAttribute("x-on-leave")); };
-                })(el, that);
-            }
-            if (el.hasAttribute("x-on-focus")) {
-                (function(el, that) {
+                }
+                if (el.hasAttribute("x-on-focus")) {
                     el.onfocus = function() { that.processElement(el, el.getAttribute("x-on-focus")); };
-                })(el, that);
-            }
-            if (el.hasAttribute("x-on-blur")) {
-                (function(el, that) {
+                }
+                if (el.hasAttribute("x-on-blur")) {
                     el.onblur = function() { that.processElement(el, el.getAttribute("x-on-blur")); };
-                })(el, that);
-            }
-            if (el.hasAttribute("x-on-input")) {
-                (function(el, that) {
-                    el.oninput = function() {
+                }
+                if (el.hasAttribute("x-on-submit")) {
+                    el.onsubmit = function(e) { return that.processElement(el, el.getAttribute("x-on-submit"), e || window.event); };
+                }
+                if (el.hasAttribute("x-on-input")) {
+                    el.oninput = function(e) {
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
                             var namepost = n.slice(0, 6);
-                            if (namepost === "x-set-" || namepost === "x-rot-" || namepost === "x-val-" || namepost === "x-var-" || namepost === "x-run-") { el.setAttribute(n, this.value); }
+                            if (namepost === "x-set-" || namepost === "x-rot-" || namepost === "x-val-" || namepost === "x-var-" || namepost === "x-run-") { el.setAttribute(n, el.value); }
                         }
-                        that.processElement(el, el.getAttribute("x-on-input"));
+                        return that.processElement(el, el.getAttribute("x-on-input"), e || window.event);
                     };
-                })(el, that);
-            }
-            if (el.hasAttribute("x-on-key")) {
-                (function(el, that) {
-                    var propagate = !el.hasAttribute("x-no-prop");
+                }
+                if (el.hasAttribute("x-on-key")) {
                     var keys = (el.getAttribute("x-on-key")).toLowerCase().split(/\s+/);
                     var keysLength = keys.length;
                     var keysObj = {};
@@ -635,13 +617,13 @@ limitations under the License.
                         e = e || window.event;
                         var key = that.getComboKey(e);
                         if (keysObj[key]) {
-                            if (!propagate) { that.stopPropagation(e); }
-                            that.preventDefault(e);
-                            that.processElement(el, el.getAttribute("x-on-key-" + key));
+                            that.processElement(el, el.getAttribute("x-on-key-" + key), e);
+                            return false;
                         }
                     };
-                })(el, that);
-            }
+                }
+            })(el, that);
+
             if (el.hasAttribute("x-on-key-window")) {
                 var keys = (el.getAttribute("x-on-key-window")).toLowerCase().split(/\s+/);
                 var keysLength = keys.length;
@@ -663,30 +645,16 @@ limitations under the License.
             }
             if (key === "tab") {
                 if (e.shiftKey && document.activeElement === that.tab.first) {
-                    that.preventDefault(e);
                     that.tab.last.focus();
+                    return false;
                 }
                 if (!e.shiftKey && document.activeElement === that.tab.last) {
-                    that.preventDefault(e);
                     that.tab.first.focus();
+                    return false;
                 }
             }
         };
         this.mutationDepth--;
-    };
-    TagX.prototype.preventDefault = function(e) {
-        if (e.preventDefault) {
-            e.preventDefault();
-        } else {
-            e.returnValue = false;
-        }
-    };
-    TagX.prototype.stopPropagation = function(e) {
-        if (e.stopPropagation) {
-            e.stopPropagation();
-        } else {
-            e.cancelBubble = true;
-        }
     };
     TagX.prototype.getComboKey = function (e) {
         var modifiers = [];
@@ -757,10 +725,10 @@ limitations under the License.
         }
         this.mutationDepth--;
     };
-    TagX.prototype.processElement = function(el, elValue) {
+    TagX.prototype.processElement = function(el, elValue, e) {
         if (this.mutationDepth > 0) { return; }
 
-        this.queue.push({ el: el, elValue: elValue });
+        this.queue.push({el: el, elValue: elValue });
 
         if (!this.queueTimer) {
             var that = this;
@@ -772,6 +740,16 @@ limitations under the License.
                 that.queueTimer = null;
             }, 0);
         }
+
+        if (e && el.hasAttribute("x-stop")) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            } else {
+                e.cancelBubble = true;
+            }
+         }
+
+        return !(e && el.hasAttribute("x-prevent"));
     };
     TagX.prototype._processElement = function(el, elValue) {
         var mode = "";
