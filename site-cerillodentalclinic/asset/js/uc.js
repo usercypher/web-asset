@@ -602,8 +602,8 @@ limitations under the License.
                         var elAttributesLength = el.attributes.length;
                         for (var j = 0; j < elAttributesLength; j++) {
                             var n = el.attributes[j].name;
-                            var namepost = n.slice(0, 6);
-                            if (namepost === "x-set-" || namepost === "x-rot-" || namepost === "x-val-" || namepost === "x-var-" || namepost === "x-run-") { el.setAttribute(n, el.value); }
+                            var prefix = n.slice(0, 6);
+                            if (prefix === "x-set-" || prefix === "x-rot-" || prefix === "x-val-" || prefix === "x-var-" || prefix === "x-run-") { el.setAttribute(n, el.value); }
                         }
                         return that.processElement(el, el.getAttribute("x-on-input"), e || window.event);
                     };
@@ -772,13 +772,13 @@ limitations under the License.
         var elAttributesLength = el.attributes.length;
         for (var i = 0; i < elAttributesLength; i++) {
             var attr = el.attributes[i];
-            var namepre = attr.name.slice(0, 6);
-            var namepost = attr.name.slice(6);
+            var prefix = attr.name.slice(0, 6);
+            var keyAttrArr = attr.name.slice(6).split(".");
+            var key = keyAttrArr[0];
 
-            if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(namepost)) || (mode === "" && rulesObj.hasOwnProperty(namepost)))) { continue; }
+            if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
 
-            if (namepre === "x-rot-") {
-                var key = namepost;
+            if (prefix === "x-rot-") {
                 var dataState = attr.value || "";
                 var states = dataState.split(/\s+/);
                 var els = (key == "") ? [el] : (this.globalRefs[key] || []);
@@ -814,11 +814,8 @@ limitations under the License.
                 }
             }
 
-            else if (namepre === "x-set-") {
-                var keySets = namepost;
-                var keySetsArr = keySets.split(".");
-                var key = keySetsArr[0];
-                var set = keySetsArr.slice(1).join(".");
+            else if (prefix === "x-set-") {
+                var set = keyAttrArr.slice(1).join(".");
                 var dataState = attr.value || "";
                 var states = dataState.split(/\s*\|\s*/);
                 var els = (key == "") ? [el] : (this.globalRefs[key] || []);
@@ -839,8 +836,7 @@ limitations under the License.
                 }
             }
 
-            else if (namepre === "x-val-") {
-                var key = namepost;
+            else if (prefix === "x-val-") {
                 var els = (key == "") ? [el] : (this.globalRefs[key] || []);
                 var elsLength = els.length;
                 for (var j = 0; j < elsLength; j++) {
@@ -859,12 +855,12 @@ limitations under the License.
                 }
             }
 
-            else if (namepre === "x-var-") { this.setVar(namepost, attr.value, el); }
+            else if (prefix === "x-var-") { this.setVar(key, attr.value, el); }
 
-            else if (namepre === "x-run-") {
+            else if (prefix === "x-run-") {
                 var triggers = attr.value.split(/\s+/);
                 var triggersLength = triggers.length;
-                for (var j = 0; j < triggersLength; j++) { this.run(namepost, triggers[j]); }
+                for (var j = 0; j < triggersLength; j++) { this.run(key, triggers[j]); }
             }
         }
 
