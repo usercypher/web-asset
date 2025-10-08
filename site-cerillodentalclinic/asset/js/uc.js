@@ -514,14 +514,16 @@ limitations under the License.
         this.globalRefs = {};
         this.globalVars = {};
         this.globalKeys = {};
+        this.watchers = {};
         this.tab = {
             first: null,
             last: null,
             default_first: "",
             default_last: ""
         };
-        this.watchers = {};
+
         this.mutationDepth = 0;
+        this.queue = [];
     }
     TagX.prototype.register = function(elements, tab) {
         this.mutationDepth++;
@@ -739,7 +741,7 @@ limitations under the License.
             }
         }
         for (var key in this.globalKeys) {
-            if (this.globalRefs.hasOwnProperty(key)) {
+            if (this.globalKeys.hasOwnProperty(key)) {
                 var els = this.globalKeys[key];
                 var elsLength = els.length;
                 var filteredEls = [];
@@ -757,7 +759,6 @@ limitations under the License.
     };
     TagX.prototype.processElement = function(el, elValue) {
         if (this.mutationDepth > 0) { return; }
-        if (!this.queue) { this.queue = []; }
 
         this.queue.push({ el: el, elValue: elValue });
 
