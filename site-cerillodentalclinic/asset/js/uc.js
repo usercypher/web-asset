@@ -686,7 +686,11 @@ limitations under the License.
     };
     TagX.prototype.run = function(key, trigger) {
         var refs = this.globalRefs[key] || [];
-        for (var i = 0; i < refs.length; i++) { this.processElement(refs[i], refs[i].getAttribute(trigger)); }
+        for (var i = 0; i < refs.length; i++) {
+            (function (that, ref, trigger) {
+                setTimeout(function () { that.processElement(ref, ref.getAttribute(trigger)); }, 0);
+            })(this, refs[i], trigger);
+        }
     };
     TagX.prototype.clean = function() {
         this.mutationDepth++;
