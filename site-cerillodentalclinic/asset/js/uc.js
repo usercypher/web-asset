@@ -62,7 +62,7 @@ limitations under the License.
         },
         strSizeOf: function (s) {
             var size = 0;
-            for (var i = 0; i < s.length; i++) {
+            for (var i = 0, ilen = s.length; i < ilen; i++) {
                 var code = s.charCodeAt(i);
                 if (code >= 0xD800 && code <= 0xDBFF) {
                     var next = s.charCodeAt(i + 1);
@@ -138,7 +138,7 @@ limitations under the License.
                         if (value === null || value === undefined) {
                             continue;
                         } else if (Object.prototype.toString.call(value) === "[object Array]") {
-                            for (var i = 0; i < value.length; i++) {
+                            for (var i = 0, ilen = value.length; i < ilen; i++) {
                                 var v = value[i];
                                 if (typeof v === "object") {
                                     query.push(buildQuery(v, k + "[]"));
@@ -186,7 +186,7 @@ limitations under the License.
                 return obj;
             }
             var parts = queryString.split("&");
-            for (var i = 0; i < parts.length; i++) {
+            for (var i = 0, ilen = parts.length; i < ilen; i++) {
                 var part = parts[i];
                 if (!part) { continue; }
                 var kv = part.split("=");
@@ -404,11 +404,11 @@ limitations under the License.
 
         if (headerStr) {
             var headerPairs = headerStr.split(/\r?\n/);
-            for (var i = 0; i < headerPairs.length; i++) {
+            for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
                 var line = headerPairs[i];
                 if (line === "") { continue; }
                 var colonPos = -1;
-                for (var j = 0; j < line.length; j++) {
+                for (var j = 0, jlen = line.length; j < jlen; j++) {
                     if (line.charAt(j) === ":") {
                         colonPos = j;
                         break;
@@ -436,7 +436,7 @@ limitations under the License.
         var loadedCount = 0;
         var hasError = false;
 
-        for (var i = 0; i < urls.length; i++) {
+        for (var i = 0, ilen = urls.length; i < ilen; i++) {
             if (!that.loadedScripts[urls[i]]) {
                 toLoad.push(urls[i]);
             } else {
@@ -457,7 +457,7 @@ limitations under the License.
                 failureCallback();
             }
         }
-        for (var j = 0; j < toLoad.length; j++) {
+        for (var j = 0, jlen = toLoad.length; j < jlen; j++) {
             (function(url, that, onLoad, onError) {
                 var script = document.createElement("script");
                 script.setAttribute("type", "text/javascript");
@@ -527,20 +527,19 @@ limitations under the License.
     }
     TagX.prototype.register = function(elements, tab) {
         this.mutationDepth++;
+
         var tabRange = (tab || this.tab.default_first + ":" + this.tab.default_last).split(/\s*:\s*/);
         var elementsLength = elements.length;
 
-        for (var i = 0; i < elementsLength; i++) {
+        for (var i = 0, ilen = elementsLength; i < ilen; i++) {
             var el = elements[i];
-            var elAttributesLength = el.attributes.length;
-            for (var j = 0; j < elAttributesLength; j++) {
+            for (var j = 0, jlen = el.attributes.length; j < jlen; j++) {
                 var attr = el.attributes[j];
                 if (attr.name.slice(0, 6) === "x-ref-") {
                     var key = attr.name.slice(6);
                     var isDuplicate = false;
                     if (!this.globalRefs[key]) { this.globalRefs[key] = []; }
-                    var globalRefsLength = this.globalRefs[key].length;
-                    for (var k = 0; k < globalRefsLength; k++) {
+                    for (var k = 0, klen = this.globalRefs[key].length; k < klen; k++) {
                         if (this.globalRefs[key][k] === el) {
                             isDuplicate = true;
                             break;
@@ -569,7 +568,7 @@ limitations under the License.
         }
 
         var that = this;
-        for (var i = 0; i < elementsLength; i++) {
+        for (var i = 0, ilen = elementsLength; i < ilen; i++) {
             var el = elements[i];
             (function(el, that) {
                 if (el.getAttribute("x-on-click") !== null) {
@@ -599,8 +598,7 @@ limitations under the License.
                 }
                 if (el.getAttribute("x-on-input") !== null) {
                     el.oninput = function(e) {
-                        var elAttributesLength = el.attributes.length;
-                        for (var j = 0; j < elAttributesLength; j++) {
+                        for (var j = 0, jlen = el.attributes.length; j < jlen; j++) {
                             var n = el.attributes[j].name;
                             var prefix = n.slice(0, 6);
                             if (prefix === "x-set-" || prefix === "x-rot-" || prefix === "x-val-" || prefix === "x-var-" || prefix === "x-run-") { el.setAttribute(n, el.value); }
@@ -610,9 +608,8 @@ limitations under the License.
                 }
                 if (el.getAttribute("x-on-key") !== null) {
                     var keys = (el.getAttribute("x-on-key")).toLowerCase().split(/\s+/);
-                    var keysLength = keys.length;
                     var keysObj = {};
-                    for (var j = 0; j < keysLength; j++) { keysObj[keys[j]] = true; }
+                    for (var j = 0, jlen = keys.length; j < jlen; j++) { keysObj[keys[j]] = true; }
                     el.onkeydown = function(e) {
                         e = e || window.event;
                         var key = that.getComboKey(e);
@@ -626,8 +623,7 @@ limitations under the License.
 
             if (el.getAttribute("x-on-key-window") !== null) {
                 var keys = (el.getAttribute("x-on-key-window")).toLowerCase().split(/\s+/);
-                var keysLength = keys.length;
-                for (var j = 0; j < keysLength; j++) {
+                for (var j = 0, jlen = keys.length; j < jlen; j++) {
                     var key = keys[j];
                     if (!that.globalKeys[key]) { that.globalKeys[key] = []; }
                     that.globalKeys[key].push(el);
@@ -640,8 +636,7 @@ limitations under the License.
             var key = that.getComboKey(e);
             if (that.globalKeys[key]) {
                 var keys = that.globalKeys[key];
-                var keysLength = keys.length;
-                for (var i = 0; i < keysLength; i++) { that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key)); }
+                for (var i = 0, ilen = keys.length; i < ilen; i++) { that.processElement(keys[i], keys[i].getAttribute("x-on-key-window-" + key)); }
             }
             if (key === "tab") {
                 if (e.shiftKey && document.activeElement === that.tab.first) {
@@ -678,15 +673,15 @@ limitations under the License.
         var valOld = this.globalVars[key];
         this.globalVars[key] = value;
         if (this.watchers[key]) {
-            for (var w = 0; w < this.watchers[key].length; w++) { this.watchers[key][w](valOld, value, el); }
+            for (var w = 0, wlen = this.watchers[key].length; w < wlen; w++) { this.watchers[key][w](valOld, value, el); }
         }
         if (this.watchers["*"]) {
-            for (var w = 0; w < this.watchers["*"].length; w++) { this.watchers["*"][w](key, valOld, value, el); }
+            for (var w = 0, wlen = this.watchers["*"].length; w < wlen; w++) { this.watchers["*"][w](key, valOld, value, el); }
         }
     };
     TagX.prototype.run = function(key, trigger) {
         var refs = this.globalRefs[key] || [];
-        for (var i = 0; i < refs.length; i++) {
+        for (var i = 0, ilen = refs.length; i < ilen; i++) {
             (function (that, ref, trigger) {
                 setTimeout(function () { that.processElement(ref, ref.getAttribute(trigger)); }, 0);
             })(this, refs[i], trigger);
@@ -698,9 +693,8 @@ limitations under the License.
         for (var key in this.globalRefs) {
             if (this.globalRefs.hasOwnProperty(key)) {
                 var els = this.globalRefs[key];
-                var elsLength = els.length;
                 var filteredEls = [];
-                for (var i = 0; i < elsLength; i++) {
+                for (var i = 0, ilen = els.length; i < ilen; i++) {
                     if (body.contains(els[i])) { filteredEls.push(els[i]); }
                 }
                 if (filteredEls.length > 0) {
@@ -715,9 +709,8 @@ limitations under the License.
         for (var key in this.globalKeys) {
             if (this.globalKeys.hasOwnProperty(key)) {
                 var els = this.globalKeys[key];
-                var elsLength = els.length;
                 var filteredEls = [];
-                for (var i = 0; i < elsLength; i++) {
+                for (var i = 0, ilen = els.length; i < ilen; i++) {
                     if (body.contains(els[i])) { filteredEls.push(els[i]); }
                 }
                 if (filteredEls.length > 0) {
@@ -768,12 +761,11 @@ limitations under the License.
             rules = elValue.split(/\s+/);
         }
 
-        var rulesLength = rules.length;
-        for (var i = 0; i < rulesLength; i++) { rulesObj[rules[i]] = true; }
+        for (var i = 0, ilen = rules.length; i < ilen; i++) { rulesObj[rules[i]] = true; }
 
-        var elAttributesLength = el.attributes.length;
-        for (var i = 0; i < elAttributesLength; i++) {
-            var attr = el.attributes[i];
+        var elAttributes = el.attributes;
+        for (var i = 0, ilen = elAttributes.length; i < ilen; i++) {
+            var attr = elAttributes[i];
             var prefix = attr.name.slice(0, 6);
             var keyAttrArr = attr.name.slice(6).split(".");
             var key = keyAttrArr[0];
@@ -784,14 +776,13 @@ limitations under the License.
                 var dataState = attr.value || "";
                 var states = dataState.split(/\s+/);
                 var els = (key == "") ? [el] : (this.globalRefs[key] || []);
-                var elsLength = els.length;
-                for (var j = 0; j < elsLength; j++) {
+                for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
                     var className = refEl.className || "";
                     var classList = className.split(/\s+/);
                     var current = refEl.getAttribute("data-simulated-state") || classList[classList.length - 1];
                     var currentIndex = -1;
-                    for (var k = 0; k < states.length; k++) {
+                    for (var k = 0, klen = states.length; k < klen; k++) {
                         if (current === states[k]) {
                             currentIndex = k;
                             break;
@@ -821,12 +812,11 @@ limitations under the License.
                 var dataState = attr.value || "";
                 var states = dataState.split(/\s*\|\s*/);
                 var els = (key == "") ? [el] : (this.globalRefs[key] || []);
-                var elsLength = els.length;
-                for (var j = 0; j < elsLength; j++) {
+                for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
                     var current = refEl.getAttribute(set) !== null ? refEl.getAttribute(set) : "null";
                     var currentIndex = -1;
-                    for (var k = 0; k < states.length; k++) {
+                    for (var k = 0, klen = states.length; k < klen; k++) {
                         if (current === states[k]) {
                             currentIndex = k;
                             break;
@@ -840,8 +830,7 @@ limitations under the License.
 
             else if (prefix === "x-val-") {
                 var els = (key == "") ? [el] : (this.globalRefs[key] || []);
-                var elsLength = els.length;
-                for (var j = 0; j < elsLength; j++) {
+                for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
                     var val = attr.value;
                     var tag = refEl.tagName.toUpperCase();
@@ -861,8 +850,7 @@ limitations under the License.
 
             else if (prefix === "x-run-") {
                 var triggers = attr.value.split(/\s+/);
-                var triggersLength = triggers.length;
-                for (var j = 0; j < triggersLength; j++) { this.run(key, triggers[j]); }
+                for (var j = 0, jlen = triggers.length; j < jlen; j++) { this.run(key, triggers[j]); }
             }
         }
 
@@ -905,8 +893,7 @@ limitations under the License.
             }
         }
     };
-    var initLength = init.length;
-    for (var i = 0; i < initLength; i++) {
+    for (var i = 0, ilen = init.length; i < ilen; i++) {
         try {
             init[i]();
         } catch (e) {
