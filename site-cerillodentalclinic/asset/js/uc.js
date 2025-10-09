@@ -686,7 +686,11 @@ limitations under the License.
     };
     TagX.prototype.run = function(key, trigger) {
         var refs = this.globalRefs[key] || [];
-        for (var i = 0; i < refs.length; i++) { setTimeout(function () { this.processElement(refs[i], refs[i].getAttribute(trigger)); }, 0); }
+        for (var i = 0; i < refs.length; i++) {
+            (function (that, ref, trigger) {
+                setTimeout(function () { that.processElement(ref, ref.getAttribute(trigger)); }, 0);
+            })(this, refs[i], trigger);
+        }
     };
     TagX.prototype.clean = function() {
         this.mutationDepth++;
@@ -730,15 +734,13 @@ limitations under the License.
 
         this.queue.push([el, elValue]);
 
-        var that = this;
-        if (!that.queueTimer) {
-            that.queueTimer = setTimeout(function () {
-                while (that.queue.length) {
-                    var item = that.queue.shift();
-                    that._processElement(item[0], item[1]);
-                }
-                that.queueTimer = null;
-            }, 0);
+        if (!this.queueTimer) {
+            this.queueTimer = true;
+            while (this.queue.length) {
+                var item = this.queue.shift();
+                this._processElement(item[0], item[1]);
+            }
+            this.queueTimer = null;
         }
 
         if (e && el.getAttribute("x-stop") !== null) {
