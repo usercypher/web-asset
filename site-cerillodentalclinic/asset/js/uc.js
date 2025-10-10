@@ -804,7 +804,7 @@ limitations under the License.
                                 refEl.className = classList.join(" ");
                                 delete refEl["xrot_simulated_state"];
                             }
-                        }, 4);
+                        }, 17);
                     })(refEl);
                 }
             }
