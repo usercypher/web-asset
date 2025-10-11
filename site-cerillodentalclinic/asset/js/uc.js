@@ -775,7 +775,7 @@ limitations under the License.
                 for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
                     var classList = (refEl.className || "").split(/\s+/);
-                    var current = refEl["xrot_simulated_state"] || classList[classList.length - 1];
+                    var current = classList[classList.length - 1];
                     var currentIndex = -1;
                     for (var k = 0, klen = states.length; k < klen; k++) {
                         if (current === states[k]) {
@@ -784,24 +784,10 @@ limitations under the License.
                         }
                     }
                     var newState = states[(currentIndex + 1) % states.length] || "_";
-
-                    if (current === newState) { continue; }
-
-                    refEl["xrot_simulated_state"] = newState;
-
-                    (function(refEl) {
-                        if (refEl["xrot_timeout"]) { clearTimeout(refEl["xrot_timeout"]); }
-                        refEl["xrot_timeout"] = setTimeout(function() {
-                            var classList = (refEl.className || "").split(/\s+/);
-                            var liveState = classList[classList.length - 1];
-                            var simulated = refEl["xrot_simulated_state"];
-                            if (simulated && simulated !== liveState) {
-                                classList[classList.length - 1] = simulated;
-                                refEl.className = classList.join(" ");
-                                delete refEl["xrot_simulated_state"];
-                            }
-                        }, 17);
-                    })(refEl);
+                    if (current !== newState) {
+                        classList[classList.length - 1] = newState;
+                        refEl.className = classList.join(" ");
+                    }
                 }
             }
 
