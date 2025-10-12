@@ -724,12 +724,14 @@ limitations under the License.
         this.queue.push([el, elValue]);
 
         if (!this.queueTimer) {
-            this.queueTimer = true;
-            while (this.queue.length) {
-                var item = this.queue.shift();
-                this._processElement(item[0], item[1]);
-            }
-            this.queueTimer = null;
+            var that = this;
+            this.queueTimer = setTimeout(function () {
+                while (that.queue.length) {
+                    var item = that.queue.shift();
+                    that._processElement(item[0], item[1]);
+                }
+                that.queueTimer = null;
+            }, 0);
         }
 
         if (e && el.getAttribute("x-stop") !== null) {
@@ -834,10 +836,7 @@ limitations under the License.
 
             else if (prefix === "x-run-") {
                 var triggers = attr.value.split(/\s+/);
-                for (var j = 0, jlen = triggers.length; j < jlen; j++) {
-                    var els = this.globalRefs[key] || [];
-                    for (var k = 0, klen = els.length; k < klen; k++) { this.queue.push([els[k], els[k].getAttribute(triggers[j])]); }
-                }
+                for (var j = 0, jlen = triggers.length; j < jlen; j++) { this.run(key, triggers[j]); }
             }
         }
 
