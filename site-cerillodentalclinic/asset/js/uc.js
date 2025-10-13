@@ -525,10 +525,10 @@ limitations under the License.
         this.mutationDepth = 0;
         this.queue = [];
     }
-    TagX.prototype.register = function(elements, tab) {
+    TagX.prototype.register = function(elements, tabStr) {
         this.mutationDepth++;
 
-        var tabRange = (tab || this.tab.default_first + ":" + this.tab.default_last).split(/\s*:\s*/);
+        var tab = (tabStr || this.tab.default_first + ":" + this.tab.default_last).split(/\s*:\s*/);
         var elementsLength = elements.length;
 
         for (var i = 0, ilen = elementsLength; i < ilen; i++) {
@@ -547,7 +547,7 @@ limitations under the License.
                     }
                     if (!isDuplicate) { this.globalRefs[key].push(el); }
                     if (!this.globalVars.hasOwnProperty(key)) {
-                        if (el.tagName === "INPUT" && (el.type === "checkbox" || el.type === "radio")) {
+                        if (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) {
                             this.globalVars[key] = el.checked;
                         } else {
                             this.globalVars[key] = el.value || el.getAttribute(attr.name);
@@ -555,14 +555,14 @@ limitations under the License.
                     }
                 }
             }
-            if (tabRange.length >= 2) {
-                if (el.getAttribute("x-ref-" + tabRange[0]) !== null) {
+            if (tab.length >= 2) {
+                if (el.getAttribute("x-ref-" + tab[0]) !== null) {
                     this.tab.first = el;
-                    this.tab.default_first = tabRange[0];
+                    this.tab.default_first = tab[0];
                 }
-                if (el.getAttribute("x-ref-" + tabRange[1]) !== null) {
+                if (el.getAttribute("x-ref-" + tab[1]) !== null) {
                     this.tab.last = el;
-                    this.tab.default_last = tabRange[1];
+                    this.tab.default_last = tab[1];
                 }
             }
         }
@@ -597,14 +597,7 @@ limitations under the License.
                     el.onsubmit = function(e) { return that.processElement(el, el.getAttribute("x-on-submit"), e || window.event); };
                 }
                 if (el.getAttribute("x-on-input") !== null) {
-                    el.oninput = function(e) {
-                        for (var j = 0, jlen = el.attributes.length; j < jlen; j++) {
-                            var n = el.attributes[j].name;
-                            var prefix = n.slice(0, 6);
-                            if (prefix === "x-set-" || prefix === "x-rot-" || prefix === "x-val-" || prefix === "x-var-" || prefix === "x-run-") { el.setAttribute(n, el.value); }
-                        }
-                        return that.processElement(el, el.getAttribute("x-on-input"), e || window.event);
-                    };
+                    el.oninput = function(e) { return that.processElement(el, el.getAttribute("x-on-input"), e || window.event); };
                 }
                 if (el.getAttribute("x-on-key") !== null) {
                     var keys = (el.getAttribute("x-on-key")).toLowerCase().split(/\s+/);
@@ -718,10 +711,10 @@ limitations under the License.
         }
         this.mutationDepth--;
     };
-    TagX.prototype.processElement = function(el, elValue, e) {
+    TagX.prototype.processElement = function(el, ruleStr, e) {
         if (this.mutationDepth > 0) { return; }
 
-        this.queue.push([el, elValue]);
+        this.queue.push([el, ruleStr]);
 
         if (!this.queueTimer) {
             var that = this;
@@ -761,19 +754,25 @@ limitations under the License.
 
         for (var i = 0, ilen = rules.length; i < ilen; i++) { rulesObj[rules[i]] = true; }
 
+        var tab = null;
+        var focus = null;
         var elAttributes = el.attributes;
         for (var i = 0, ilen = elAttributes.length; i < ilen; i++) {
             var attr = elAttributes[i];
+            var attrName = attr.name;
+            var attrValue = attr.value;
             var prefix = attr.name.slice(0, 6);
             var keyAttrArr = attr.name.slice(6).split(".");
             var key = keyAttrArr[0];
 
             if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
 
+            if (Utils.trim(attrValue) === "this") { attrValue = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked : el.value || (el.children.length === 0 ? el.innerHTML : ""); }
+
             if (prefix === "x-rot-") {
-                var dataState = attr.value || "";
+                var dataState = attrValue || "";
                 var states = dataState.split(/\s+/);
-                var els = (key == "") ? [el] : (this.globalRefs[key] || []);
+                var els = (key == "this") ? [el] : (this.globalRefs[key] || []);
                 for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
                     var classList = (refEl.className || "").split(/\s+/);
@@ -785,7 +784,7 @@ limitations under the License.
                             break;
                         }
                     }
-                    var newState = states[(currentIndex + 1) % states.length] || "_";
+                    var newState = states[(currentIndex + 1) % states.length] || "null";
                     if (current !== newState) {
                         classList[classList.length - 1] = newState;
                         refEl.className = classList.join(" ");
@@ -795,9 +794,9 @@ limitations under the License.
 
             else if (prefix === "x-set-") {
                 var set = keyAttrArr.slice(1).join(".");
-                var dataState = attr.value || "";
+                var dataState = attrValue || "";
                 var states = dataState.split(/\s*\|\s*/);
-                var els = (key == "") ? [el] : (this.globalRefs[key] || []);
+                var els = (key == "this") ? [el] : (this.globalRefs[key] || []);
                 for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
                     var current = refEl.getAttribute(set) !== null ? refEl.getAttribute(set) : "null";
@@ -815,10 +814,10 @@ limitations under the License.
             }
 
             else if (prefix === "x-val-") {
-                var els = (key == "") ? [el] : (this.globalRefs[key] || []);
+                var els = (key == "this") ? [el] : (this.globalRefs[key] || []);
                 for (var j = 0, jlen = els.length; j < jlen; j++) {
                     var refEl = els[j];
-                    var val = attr.value;
+                    var val = attrValue;
                     var tag = refEl.tagName.toUpperCase();
                     if ((tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") && val != refEl.value) {
                         if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
@@ -832,30 +831,31 @@ limitations under the License.
                 }
             }
 
-            else if (prefix === "x-var-") { this.setVar(key, attr.value, el); }
+            else if (prefix === "x-var-") { this.setVar(key, attrValue, el); }
 
             else if (prefix === "x-run-") {
-                var triggers = attr.value.split(/\s+/);
+                var triggers = attrValue.split(/\s+/);
                 for (var j = 0, jlen = triggers.length; j < jlen; j++) { this.run(key, triggers[j]); }
             }
+
+            else if (!tab && attrName === "x-tab-reset") {
+                tab = [this.tab.default_first, this.tab.default_last];
+                this.tab.first = null;
+                this.tab.last = null;
+            }
+
+            else if (!tab && attrName === "x-tab") { tab = attrValue.split(/\s*:\s*/); }
+
+            else if (!focus && attrName === "x-focus") { focus = attrValue; }
         }
 
-        var tabRange = [];
-        if (el.getAttribute("x-tab-reset") !== null) {
-            tabRange = [this.tab.default_first, this.tab.default_last];
-            this.tab.first = null;
-            this.tab.last = null;
-        } else if (el.getAttribute("x-tab") !== null) {
-            tabRange = el.getAttribute("x-tab").split(/\s*:\s*/);
-        }
-        if (tabRange.length === 2) {
-            if (this.globalRefs[tabRange[0]]) { this.tab.first = this.globalRefs[tabRange[0]][0]; }
-            if (this.globalRefs[tabRange[1]]) { this.tab.last = this.globalRefs[tabRange[1]][0]; }
+        if (tab && tab.length === 2) {
+            if (this.globalRefs[tab[0]]) { this.tab.first = this.globalRefs[tab[0]][0]; }
+            if (this.globalRefs[tab[1]]) { this.tab.last = this.globalRefs[tab[1]][0]; }
         }
 
-        var focus = el.getAttribute("x-focus");
         if (focus && this.globalRefs[focus]) {
-            if (this.isFocusing) clearTimeout(this.isFocusing);
+            if (this.isFocusing) { clearTimeout(this.isFocusing); }
             var focusRef = this.globalRefs[focus][0];
             this.isFocusing = setTimeout(function() { focusRef.focus(); }, 50);
         }
