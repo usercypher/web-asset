@@ -761,8 +761,8 @@ limitations under the License.
             var attr = elAttributes[i];
             var attrName = attr.name;
             var attrValue = attr.value;
-            var prefix = attr.name.slice(0, 6);
-            var keyAttrArr = attr.name.slice(6).split(".");
+            var prefix = attrName.slice(0, 6);
+            var keyAttrArr = attrName.slice(6).split(".");
             var key = keyAttrArr[0];
 
             if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
