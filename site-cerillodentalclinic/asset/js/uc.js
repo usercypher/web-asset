@@ -498,14 +498,14 @@ limitations under the License.
     };
     El.prototype.restore = function () {
         if (this.isLastContentSaved) {
-            this.el.innerHTML = this.lastContent;
+            if (this.el.innerHTML !== this.lastContent) { this.el.innerHTML = this.lastContent; }
             this.lastContent = "";
             this.isLastContentSaved = false;
         }
         return this;
     };
     El.prototype.html = function (content) {
-        this.el.innerHTML = content;
+        if (this.el.innerHTML !== content) { this.el.innerHTML = content; }
     };
     El.prototype.prepend = function (content) {
         this.el.insertAdjacentHTML("afterbegin", content);
