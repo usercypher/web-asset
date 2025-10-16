@@ -475,42 +475,54 @@ limitations under the License.
             })(toLoad[j], that, onLoad, onError);
         }
     };
-    function Tag(id) {
-        this.tag = document.getElementById(id);
-        if (!this.tag) {
-            console.error("Tag element not found: #" + id);
+    function El(input) {
+        if (typeof input === 'string') {
+            this.el = document.getElementById(input);
+            if (!this.el) {
+                console.log("El: No element found with ID '" + input + "'");
+                return;
+            }
+        } else if (input && typeof input === 'object' && input.nodeType === 1) {
+            this.el = input;
+        } else {
+            console.log("El: Invalid argument must be a string ID or a DOM element");
             return;
         }
         this.lastContent = "";
         this.isLastContentSaved = false;
     }
-    Tag.prototype._handleTemp = function (isTemp) {
+    El.prototype.store = function () {
+        this.lastContent = this.el.innerHTML;
+        this.isLastContentSaved = true;
+        return this;
+    };
+    El.prototype.restore = function () {
         if (this.isLastContentSaved) {
-            this.tag.innerHTML = this.lastContent;
+            this.el.innerHTML = this.lastContent;
             this.lastContent = "";
             this.isLastContentSaved = false;
         }
-        if (isTemp) {
-            this.lastContent = this.tag.innerHTML;
-            this.isLastContentSaved = true;
-        }
+        return this;
     };
-    Tag.prototype.set = function (content, isTemp) {
-        this._handleTemp(isTemp);
-        this.tag.innerHTML = content;
+    El.prototype.html = function (content) {
+        this.el.innerHTML = content;
     };
-    Tag.prototype.prepend = function (content, isTemp) {
-        this._handleTemp(isTemp);
-        this.tag.insertAdjacentHTML("afterbegin", content);
+    El.prototype.prepend = function (content) {
+        this.el.insertAdjacentHTML("afterbegin", content);
     };
-    Tag.prototype.append = function (content, isTemp) {
-        this._handleTemp(isTemp);
-        this.tag.insertAdjacentHTML("beforeend", content);
+    El.prototype.append = function (content) {
+        this.el.insertAdjacentHTML("beforeend", content);
     };
-    Tag.prototype.remove = function () {
-        if (this.tag && this.tag.parentNode) { this.tag.parentNode.removeChild(this.tag); }
+    El.prototype.before = function (content) {
+        this.el.insertAdjacentHTML("beforebegin", content);
     };
-    function TagX() {
+    El.prototype.after = function (content) {
+        this.el.insertAdjacentHTML("afterend", content);
+    };
+    El.prototype.remove = function () {
+        if (this.el && this.el.parentNode) { this.el.parentNode.removeChild(this.el); }
+    };
+    function ElX() {
         this.refs = {};
         this.vars = {};
         this.taps = {};
@@ -525,7 +537,7 @@ limitations under the License.
         this.mutationDepth = 0;
         this.queue = [];
     }
-    TagX.prototype.register = function(elements, tabStr) {
+    ElX.prototype.register = function(elements, tabStr) {
         this.mutationDepth++;
 
         var tab = (tabStr || this.tab.default_first + ":" + this.tab.default_last).split(/\s*:\s*/);
@@ -548,7 +560,7 @@ limitations under the License.
                     if (!isDuplicate) { this.refs[key].push(el); }
                     if (!this.vars.hasOwnProperty(key)) {
                         if (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) {
-                            this.vars[key] = el.checked;
+                            this.vars[key] = el.checked.toString();
                         } else {
                             this.vars[key] = el.value || el.getAttribute(attr.name);
                         }
@@ -644,24 +656,24 @@ limitations under the License.
         };
         this.mutationDepth--;
     };
-    TagX.prototype.getComboKey = function (e) {
+    ElX.prototype.getComboKey = function (e) {
         var modifiers = [];
         if (e.ctrlKey) { modifiers.push("ctrl"); }
         if (e.altKey) { modifiers.push("alt"); }
         if (e.shiftKey) { modifiers.push("shift"); }
         return (modifiers.length ? modifiers.join("-") + "-" : "") + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
     };
-    TagX.prototype.tap = function(key, callback) {
+    ElX.prototype.tap = function(key, callback) {
         if (!this.taps[key]) { this.taps[key] = []; }
-        this.taps[key].push(callback);
+        return this.taps[key].push(callback) - 1;
     };
-    TagX.prototype.getRef = function(key) {
+    ElX.prototype.getRef = function(key) {
         return this.refs[key] || [];
     };
-    TagX.prototype.getVar = function (key) {
+    ElX.prototype.getVar = function (key) {
         return this.vars[key];
     };
-    TagX.prototype.setVar = function (key, value, el) {
+    ElX.prototype.setVar = function (key, value, el) {
         el = el || null;
         var old = this.vars[key];
         this.vars[key] = value;
@@ -672,46 +684,34 @@ limitations under the License.
             for (var w = 0, wlen = this.taps["*"].length; w < wlen; w++) { this.taps["*"][w](key, old, value, el); }
         }
     };
-    TagX.prototype.run = function(key, trigger) {
+    ElX.prototype.run = function(key, trigger) {
         var refs = this.refs[key] || [];
         for (var i = 0, ilen = refs.length; i < ilen; i++) { this.processElement(refs[i], refs[i].getAttribute(trigger)); }
     };
-    TagX.prototype.clean = function() {
+    ElX.prototype.clean = function() {
         this.mutationDepth++;
         var body = document.body;
-        for (var key in this.refs) {
-            if (this.refs.hasOwnProperty(key)) {
-                var els = this.refs[key];
-                var filteredEls = [];
-                for (var i = 0, ilen = els.length; i < ilen; i++) {
-                    if (body.contains(els[i])) { filteredEls.push(els[i]); }
-                }
-                if (filteredEls.length > 0) {
-                    this.refs[key] = filteredEls;
-                } else {
-                    delete this.refs[key];
-                    delete this.vars[key];
-                    if (this.taps && this.taps[key]) { delete this.taps[key]; }
-                }
-            }
-        }
-        for (var key in this.keys) {
-            if (this.keys.hasOwnProperty(key)) {
-                var els = this.keys[key];
-                var filteredEls = [];
-                for (var i = 0, ilen = els.length; i < ilen; i++) {
-                    if (body.contains(els[i])) { filteredEls.push(els[i]); }
-                }
-                if (filteredEls.length > 0) {
-                    this.keys[key] = filteredEls;
-                } else {
-                    delete this.keys[key];
+        var objects = [this.refs, this.keys]
+        for (var i = 0, ilen = objects.length; i < ilen; i++) {
+            var object = objects[i];
+            for (var key in object) {
+                if (object.hasOwnProperty(key)) {
+                    var els = object[key];
+                    var filteredEls = [];
+                    for (var j = 0, jlen = els.length; j < jlen; j++) {
+                        if (body.contains(els[j])) { filteredEls.push(els[j]); }
+                    }
+                    if (filteredEls.length > 0) {
+                        object[key] = filteredEls;
+                    } else {
+                        delete object[key];
+                    }
                 }
             }
         }
         this.mutationDepth--;
     };
-    TagX.prototype.processElement = function(el, ruleStr, e) {
+    ElX.prototype.processElement = function(el, ruleStr, e) {
         if (this.mutationDepth > 0) { return; }
 
         this.queue.push([el, ruleStr]);
@@ -737,7 +737,7 @@ limitations under the License.
 
         return !(e && el.getAttribute("x-prevent") !== null);
     };
-    TagX.prototype._processElement = function(el, elValue) {
+    ElX.prototype._processElement = function(el, elValue) {
         var mode = "";
         var rules = [];
         var rulesObj = {};
@@ -765,9 +765,9 @@ limitations under the License.
             var keyAttrArr = attrName.slice(6).split(".");
             var key = keyAttrArr[0];
 
-            if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
+            if (!(mode === "*" || (mode === "!" && (!rulesObj.hasOwnProperty(key) || !rulesObj.hasOwnProperty(attrName))) || (mode === "" && (rulesObj.hasOwnProperty(key) || rulesObj.hasOwnProperty(attrName))))) { continue; }
 
-            if (Utils.trim(attrValue) === "this") { attrValue = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked : el.value || (el.children.length === 0 ? el.innerHTML : ""); }
+            if (Utils.trim(attrValue) === "this") { attrValue = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked.toString() : el.value || (el.children.length === 0 ? el.innerHTML : ""); }
 
             if (prefix === "x-rot-") {
                 var dataState = attrValue || "";
@@ -784,7 +784,7 @@ limitations under the License.
                             break;
                         }
                     }
-                    var newState = states[(currentIndex + 1) % states.length] || "null";
+                    var newState = states[(currentIndex + 1) % states.length] || "_";
                     if (current !== newState) {
                         classList[classList.length - 1] = newState;
                         refEl.className = classList.join(" ");
@@ -866,8 +866,8 @@ limitations under the License.
     global.Request = Request;
     global.Response = Response;
     global.Script = Script;
-    global.Tag = Tag;
-    global.TagX = TagX;
+    global.El = El;
+    global.ElX = ElX;
 
     var init = global.init || [];
     global.init = {

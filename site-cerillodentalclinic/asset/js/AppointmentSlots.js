@@ -127,8 +127,8 @@
                 slotsContainer.appendChild(table);
         
                 // Register modals
-                tagx.register(document.querySelectorAll('#slots-container *'));
-                tagx.clean();
+                elx.register(document.querySelectorAll('#slots-container *'));
+                elx.clean();
             }
         });
     };

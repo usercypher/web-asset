@@ -4,7 +4,7 @@
     function MessageNotificationList() {}
 
     MessageNotificationList.prototype.init = function(url, latestMessageTime) {
-        var notificationContainer = new Tag("notification-container");
+        var notificationContainer = new El("notification-container");
         var request = new Request(new XMLHttpRequest());
         var isPollingActive = true;
         var isVisible = true;
@@ -28,7 +28,7 @@
     
             request.addCallback(function(request, response) {
                 if (response.code === 0) {
-                    notificationContainer.set('No internet connection.');
+                    notificationContainer.html('No internet connection.');
                 } else if (response.code > 299) {
                     isPollingActive = false;
                     return;

@@ -8,7 +8,7 @@
         var chatWindow = document.getElementById('chat-window');
         var chatInput = document.getElementById('chat-input');
         var chatSend = document.getElementById('chat-send');
-        var chatMessages = new Tag('chat-messages');
+        var chatMessages = new El('chat-messages');
         
         let chatHistory = [];
 
@@ -26,7 +26,7 @@
             if (confirm('Are you sure you want to clear the chat history?')) {
                 chatHistory = [];
                 sessionStorage.removeItem('chatHistory');
-                chatMessages.tag.innerHTML = '';
+                chatMessages.html('');
                 chatInput.focus();
             }
         });
@@ -47,7 +47,7 @@
 
         // Scroll to bottom of chat
         function scrollToBottom() {
-            chatMessages.tag.scrollTop = chatMessages.tag.scrollHeight;
+            chatMessages.el.scrollTop = chatMessages.el.scrollHeight;
         }
 
         function enableLongPressToCopy(selector) {

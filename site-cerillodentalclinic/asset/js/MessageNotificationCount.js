@@ -4,7 +4,7 @@
     function MessageNotificationCount() {}
 
     MessageNotificationCount.prototype.init = function(url) {
-        var notificationBadge = new Tag("notification-badge");
+        var notificationBadge = new El("notification-badge");
         var request = new Request(new XMLHttpRequest());
     
         var initialPageURL = new Url().base;
@@ -19,17 +19,17 @@
     
             request.addCallback(function(request, response) {
                 if (response.code === 0) {
-                    notificationBadge.set('No internet connection.');
+                    notificationBadge.html('No internet connection.');
                 } else if (response.code > 299) {
                     isPollingActive = false;
                     return;
                 } else {
                     if (response.content === "0") {
-                        notificationBadge.tag.classList.remove('active');
+                        notificationBadge.el.classList.remove('active');
                     } else {
-                        notificationBadge.tag.classList.add('active');
+                        notificationBadge.el.classList.add('active');
                     }
-                    notificationBadge.set(response.content);
+                    notificationBadge.html(response.content);
                 }
     
                 if (isPollingActive && isVisible) {
