@@ -663,35 +663,10 @@ limitations under the License.
         if (e.shiftKey) { modifiers.push("shift"); }
         return (modifiers.length ? modifiers.join("-") + "-" : "") + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
     };
-    ElX.prototype.tap = function(key, callback) {
-        if (!this.taps[key]) { this.taps[key] = []; }
-        return this.taps[key].push(callback) - 1;
-    };
-    ElX.prototype.getRef = function(key) {
-        return this.refs[key] || [];
-    };
-    ElX.prototype.getVar = function (key) {
-        return this.vars[key];
-    };
-    ElX.prototype.setVar = function (key, value, el) {
-        el = el || null;
-        var old = this.vars[key];
-        this.vars[key] = value;
-        if (this.taps[key]) {
-            for (var w = 0, wlen = this.taps[key].length; w < wlen; w++) { this.taps[key][w](old, value, el); }
-        }
-        if (this.taps["*"]) {
-            for (var w = 0, wlen = this.taps["*"].length; w < wlen; w++) { this.taps["*"][w](key, old, value, el); }
-        }
-    };
-    ElX.prototype.run = function(key, trigger) {
-        var refs = this.refs[key] || [];
-        for (var i = 0, ilen = refs.length; i < ilen; i++) { this.processElement(refs[i], refs[i].getAttribute(trigger)); }
-    };
     ElX.prototype.clean = function() {
         this.mutationDepth++;
         var body = document.body;
-        var objects = [this.refs, this.keys]
+        var objects = [this.refs, this.keys];
         for (var i = 0, ilen = objects.length; i < ilen; i++) {
             var object = objects[i];
             for (var key in object) {
@@ -710,6 +685,95 @@ limitations under the License.
             }
         }
         this.mutationDepth--;
+    };
+    ElX.prototype.x = function (key) {
+        return new X(key, this);
+    };
+    ElX.prototype.ref = function(key) {
+        return this.refs[key] || [];
+    };
+    ElX.prototype.tap = function(key, callback) {
+        if (!this.taps[key]) { this.taps[key] = []; }
+        return this.taps[key].push(callback) - 1;
+    };
+    ElX.prototype.untap = function(key, index) {
+        this.taps[key][index] = function () {};
+    };
+    ElX.prototype.rot = function(key, attrValue, el) {
+        var dataState = attrValue || "";
+        var states = dataState.split(/\s+/);
+        var els = (key == "this") ? [el] : (this.refs[key] || []);
+        for (var j = 0, jlen = els.length; j < jlen; j++) {
+            var refEl = els[j];
+            var classList = (refEl.className || "").split(/\s+/);
+            var current = classList[classList.length - 1];
+            var currentIndex = -1;
+            for (var k = 0, klen = states.length; k < klen; k++) {
+                if (current === states[k]) {
+                    currentIndex = k;
+                    break;
+                }
+            }
+            var newState = states[(currentIndex + 1) % states.length] || "_";
+            if (current !== newState) {
+                classList[classList.length - 1] = newState;
+                refEl.className = classList.join(" ");
+            }
+        }
+    };
+    ElX.prototype.set = function(key, set, attrValue, el) {
+        var dataState = attrValue || "";
+        var states = dataState.split(/\s*\|\s*/);
+        var els = (key == "this") ? [el] : (this.refs[key] || []);
+        for (var j = 0, jlen = els.length; j < jlen; j++) {
+            var refEl = els[j];
+            var current = refEl.getAttribute(set) !== null ? refEl.getAttribute(set) : "null";
+            var currentIndex = -1;
+            for (var k = 0, klen = states.length; k < klen; k++) {
+                if (current === states[k]) {
+                    currentIndex = k;
+                    break;
+                }
+            }
+            var newState = states[(currentIndex + 1) % states.length] || "";
+            if (newState === "null") { refEl.removeAttribute(set); }
+            else if (current !== newState) { refEl.setAttribute(set, newState); }
+        }
+    };
+    ElX.prototype.val = function(key, attrValue, el) {
+        var els = (key == "this") ? [el] : (this.refs[key] || []);
+        for (var j = 0, jlen = els.length; j < jlen; j++) {
+            var refEl = els[j];
+            var val = attrValue;
+            var tag = refEl.tagName.toUpperCase();
+            if ((tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") && val != refEl.value) {
+                if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
+                    refEl.checked = (val === true || val === "true" || val === "1");
+                } else if (val != refEl.value) {
+                    refEl.value = val;
+                }
+            } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
+                refEl.innerHTML = Utils.htmlEncode(val);
+            }
+        }
+    };
+    ElX.prototype.var = function (key, value, el) {
+        el = el || null;
+        var old = this.vars[key];
+        this.vars[key] = value;
+        if (this.taps[key]) {
+            for (var w = 0, wlen = this.taps[key].length; w < wlen; w++) { this.taps[key][w](old, value, el); }
+        }
+        if (this.taps["*"]) {
+            for (var w = 0, wlen = this.taps["*"].length; w < wlen; w++) { this.taps["*"][w](key, old, value, el); }
+        }
+    };
+    ElX.prototype.run = function(key, triggersStr) {
+        var triggers = triggersStr.split(/\s+/);
+        for (var i = 0, ilen = triggers.length; i < ilen; i++) {
+            var refs = this.refs[key] || [];
+            for (var j = 0, jlen = refs.length; j < jlen; j++) { this.processElement(refs[j], refs[j].getAttribute(triggers[i])); }
+        }
     };
     ElX.prototype.processElement = function(el, ruleStr, e) {
         if (this.mutationDepth > 0) { return; }
@@ -765,78 +829,19 @@ limitations under the License.
             var keyAttrArr = attrName.slice(6).split(".");
             var key = keyAttrArr[0];
 
-            if (!(mode === "*" || (mode === "!" && (!rulesObj.hasOwnProperty(key) || !rulesObj.hasOwnProperty(attrName))) || (mode === "" && (rulesObj.hasOwnProperty(key) || rulesObj.hasOwnProperty(attrName))))) { continue; }
+            if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
 
             if (Utils.trim(attrValue) === "this") { attrValue = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked.toString() : el.value || (el.children.length === 0 ? el.innerHTML : ""); }
 
-            if (prefix === "x-rot-") {
-                var dataState = attrValue || "";
-                var states = dataState.split(/\s+/);
-                var els = (key == "this") ? [el] : (this.refs[key] || []);
-                for (var j = 0, jlen = els.length; j < jlen; j++) {
-                    var refEl = els[j];
-                    var classList = (refEl.className || "").split(/\s+/);
-                    var current = classList[classList.length - 1];
-                    var currentIndex = -1;
-                    for (var k = 0, klen = states.length; k < klen; k++) {
-                        if (current === states[k]) {
-                            currentIndex = k;
-                            break;
-                        }
-                    }
-                    var newState = states[(currentIndex + 1) % states.length] || "_";
-                    if (current !== newState) {
-                        classList[classList.length - 1] = newState;
-                        refEl.className = classList.join(" ");
-                    }
-                }
-            }
+            if (prefix === "x-rot-") { this.rot(key, attrValue, el); }
 
-            else if (prefix === "x-set-") {
-                var set = keyAttrArr.slice(1).join(".");
-                var dataState = attrValue || "";
-                var states = dataState.split(/\s*\|\s*/);
-                var els = (key == "this") ? [el] : (this.refs[key] || []);
-                for (var j = 0, jlen = els.length; j < jlen; j++) {
-                    var refEl = els[j];
-                    var current = refEl.getAttribute(set) !== null ? refEl.getAttribute(set) : "null";
-                    var currentIndex = -1;
-                    for (var k = 0, klen = states.length; k < klen; k++) {
-                        if (current === states[k]) {
-                            currentIndex = k;
-                            break;
-                        }
-                    }
-                    var newState = states[(currentIndex + 1) % states.length] || "";
-                    if (newState === "null") { refEl.removeAttribute(set); }
-                    else if (current !== newState) { refEl.setAttribute(set, newState); }
-                }
-            }
+            else if (prefix === "x-set-") { this.set(key, keyAttrArr.slice(1).join("."), attrValue, el); }
 
-            else if (prefix === "x-val-") {
-                var els = (key == "this") ? [el] : (this.refs[key] || []);
-                for (var j = 0, jlen = els.length; j < jlen; j++) {
-                    var refEl = els[j];
-                    var val = attrValue;
-                    var tag = refEl.tagName.toUpperCase();
-                    if ((tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") && val != refEl.value) {
-                        if (tag === "INPUT" && (refEl.type === "checkbox" || refEl.type === "radio")) {
-                            refEl.checked = (val === true || val === "true" || val === "1");
-                        } else if (val != refEl.value) {
-                            refEl.value = val;
-                        }
-                    } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
-                        refEl.innerHTML = Utils.htmlEncode(val);
-                    }
-                }
-            }
+            else if (prefix === "x-val-") { this.val(key, attrValue, el); }
 
-            else if (prefix === "x-var-") { this.setVar(key, attrValue, el); }
+            else if (prefix === "x-var-") { this.var(key, attrValue, el); }
 
-            else if (prefix === "x-run-") {
-                var triggers = attrValue.split(/\s+/);
-                for (var j = 0, jlen = triggers.length; j < jlen; j++) { this.run(key, triggers[j]); }
-            }
+            else if (prefix === "x-run-") { this.run(key, attrValue); }
 
             else if (!tab && attrName === "x-tab-reset") {
                 tab = [this.tab.default_first, this.tab.default_last];
@@ -860,6 +865,19 @@ limitations under the License.
             this.isFocusing = setTimeout(function() { focusRef.focus(); }, 50);
         }
     };
+    function X(key, elx) {
+        this.key = key;
+        this.elx = elx;
+    }
+    X.prototype.value = function() { return this.elx.vars[this.key]; };
+    X.prototype.ref = function() { return this.elx.refs[this.key] || []; };
+    X.prototype.tap = function(callback) { return this.elx.tap(this.key, callback); };
+    X.prototype.untap = function(index) { this.elx.untap(this.key, index); };
+    X.prototype.rot = function(value, el) { this.elx.rot(this.key, value, el); };
+    X.prototype.set = function(attr, value, el) { this.elx.rot(this.key, attr, value, el); };
+    X.prototype.val = function(value, el) { this.elx.val(this.key, value, el); };
+    X.prototype.var = function(value, el) { this.elx.var(this.key, value, el); };
+    X.prototype.run = function(value, el) { this.elx.run(this.key, value, el); };
 
     global.Utils = Utils;
     global.Url = Url;

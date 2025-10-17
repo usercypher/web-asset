@@ -100,8 +100,8 @@
                                 type="button"
                                 x-ref--create-appointment-open-${buttonId}
                                 x-on-click
-                                x-cycle--create-appointment=""
-                                x-cycle--create-appointment-content=""
+                                x-rot--create-appointment=""
+                                x-rot--create-appointment-content=""
                                 x-focus="-create-appointment-tab-last"
                                 x-tab="-create-appointment-tab-first:-create-appointment-tab-last"
                                 x-set-window_x-on-key-window-escape="-create-appointment-close"
