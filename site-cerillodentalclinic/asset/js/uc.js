@@ -34,7 +34,7 @@ limitations under the License.
                     }
                 } catch (e) {
                     clearInterval(intervalId);
-                    console.log("Utils.run: error in condition or callback: " + e);
+                    console.log("Utils.run: error in condition or callback: " + e.message);
                 }
             }, interval);
         },
@@ -86,7 +86,7 @@ limitations under the License.
         },
         debounce: function (callback, time) {
             if (typeof time !== "number" || typeof callback !== "function") {
-                console.error("Utils.debounce: Invalid arguments");
+                console.log("Utils.debounce: Invalid arguments");
                 return function () {};
             }
             var timer;
@@ -101,7 +101,7 @@ limitations under the License.
         },
         throttle: function (callback, time) {
             if (typeof time !== "number" || typeof callback !== "function") {
-                console.error("Utils.throttle: Invalid arguments");
+                console.log("Utils.throttle: Invalid arguments");
                 return function () {};
             }
             var lastCall = 0;
@@ -280,7 +280,7 @@ limitations under the License.
         if (timeout !== -1) {
             timeoutId = setTimeout(function () {
                 self.xhr.abort();
-                console.error("Request Error: Request timed out and was aborted.");
+                console.log("Request: Request timed out and was aborted.");
                 self.nextCallback(self, new Response( {
                     "status": 408,
                     "responseText": "",
@@ -306,7 +306,7 @@ limitations under the License.
         if (this.xhr && this.xhr.readyState !== 4) {
             this.xhr.abort();
             this.nextCallback(this, new Response(this.xhr));
-            console.error("Request Error: Request aborted.");
+            console.log("Request: Request aborted.");
         }
     };
     Request.prototype.retry = function () {
@@ -889,19 +889,7 @@ limitations under the License.
 
     var init = global.init || [];
     global.init = {
-        push: function (fn) {
-            try {
-                fn();
-            } catch (e) {
-                console.error("init queue error:", e);
-            }
-        }
+        push: function (fn) { fn(); }
     };
-    for (var i = 0, ilen = init.length; i < ilen; i++) {
-        try {
-            init[i]();
-        } catch (e) {
-            console.error("init queue error:", e);
-        }
-    }
+    for (var i = 0, ilen = init.length; i < ilen; i++) { init[i](); }
 })();
