@@ -28,8 +28,7 @@ html {
 }
 
 body {
-
-    font-family: "Trebuchet MS", Tahoma, Verdana, Arial, sans-serif;
+    font-family: "Arial", "Helvetica", "Verdana", "Tahoma", "Geneva", sans-serif;
     min-height: 100%;
 }
 
@@ -75,7 +74,7 @@ blockquote {
 
 pre, code, kbd, samp, var {
     border: 1px solid #ccc;
-    font-family: "Lucida Console", "Courier New", Monaco, monospace;
+    font-family: "Courier New", Courier, monospace;
 }
 
 pre {
