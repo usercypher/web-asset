@@ -537,7 +537,7 @@ limitations under the License.
         this.mutationDepth = 0;
         this.queue = [];
     }
-    ElX.prototype.register = function(elements, tabStr) {
+    ElX.prototype.init = function(elements, tabStr) {
         this.mutationDepth++;
 
         var tab = (tabStr || this.tab.default_first + ":" + this.tab.default_last).split(/\s*:\s*/);
