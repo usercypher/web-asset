@@ -686,8 +686,8 @@ limitations under the License.
         }
         this.mutationDepth--;
     };
-    ElX.prototype.x = function (key) {
-        return new X(key, this);
+    ElX.prototype.x = function (key, value) {
+        return new X(this, key, value);
     };
     ElX.prototype.ref = function(key) {
         return this.refs[key] || [];
@@ -721,13 +721,13 @@ limitations under the License.
             }
         }
     };
-    ElX.prototype.set = function(key, set, attrValue, el) {
+    ElX.prototype.set = function(key, attrName, attrValue, el) {
         var dataState = attrValue || "";
         var states = dataState.split(/\s*\|\s*/);
         var els = (key == "this") ? [el] : (this.refs[key] || []);
         for (var j = 0, jlen = els.length; j < jlen; j++) {
             var refEl = els[j];
-            var current = refEl.getAttribute(set) !== null ? refEl.getAttribute(set) : "null";
+            var current = refEl.getAttribute(attrName) !== null ? refEl.getAttribute(attrName) : "null";
             var currentIndex = -1;
             for (var k = 0, klen = states.length; k < klen; k++) {
                 if (current === states[k]) {
@@ -736,8 +736,8 @@ limitations under the License.
                 }
             }
             var newState = states[(currentIndex + 1) % states.length] || "";
-            if (newState === "null") { refEl.removeAttribute(set); }
-            else if (current !== newState) { refEl.setAttribute(set, newState); }
+            if (newState === "null") { refEl.removeAttribute(attrName); }
+            else if (current !== newState) { refEl.setAttribute(attrName, newState); }
         }
     };
     ElX.prototype.val = function(key, attrValue, el) {
@@ -865,16 +865,17 @@ limitations under the License.
             this.isFocusing = setTimeout(function() { focusRef.focus(); }, 50);
         }
     };
-    function X(key, elx) {
-        this.key = key;
+    function X(elx, key, value) {
         this.elx = elx;
+        this.key = key;
+        this.elx.vars[key] = value || null;
     }
     X.prototype.value = function() { return this.elx.vars[this.key]; };
     X.prototype.ref = function() { return this.elx.refs[this.key] || []; };
     X.prototype.tap = function(callback) { return this.elx.tap(this.key, callback); };
     X.prototype.untap = function(index) { this.elx.untap(this.key, index); };
     X.prototype.rot = function(value, el) { this.elx.rot(this.key, value, el); };
-    X.prototype.set = function(attr, value, el) { this.elx.rot(this.key, attr, value, el); };
+    X.prototype.set = function(attr, value, el) { this.elx.set(this.key, attr, value, el); };
     X.prototype.val = function(value, el) { this.elx.val(this.key, value, el); };
     X.prototype.var = function(value, el) { this.elx.var(this.key, value, el); };
     X.prototype.run = function(value, el) { this.elx.run(this.key, value, el); };
