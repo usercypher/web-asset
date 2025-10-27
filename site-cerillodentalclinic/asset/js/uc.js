@@ -17,196 +17,196 @@ limitations under the License.
 (function() {
     var global = (typeof window !== "undefined") ? window: this;
 
-    var Utils = {
-        run: function(condition, callback, options) {
-            options = options || {};
-            var startTime = new Date().getTime();
-            var interval = options.interval || 100;
-            var timeout = options.timeout || 30000;
-            var intervalId = setInterval(function () {
-                try {
-                    if (condition()) {
-                        clearInterval(intervalId);
-                        callback();
-                    } else if (new Date().getTime() - startTime >= timeout) {
-                        clearInterval(intervalId);
-                        console.log("Utils.run: timeout reached without condition being true.");
-                    }
-                } catch (e) {
+    var Utils = {};
+    Utils.run = function(condition, callback, options) {
+        options = options || {};
+        var startTime = new Date().getTime();
+        var interval = options.interval || 100;
+        var timeout = options.timeout || 30000;
+        var intervalId = setInterval(function () {
+            try {
+                if (condition()) {
                     clearInterval(intervalId);
-                    console.log("Utils.run: error in condition or callback: " + e.message);
+                    callback();
+                } else if (new Date().getTime() - startTime >= timeout) {
+                    clearInterval(intervalId);
+                    console.log("Utils.run: timeout reached without condition being true.");
                 }
-            }, interval);
-        },
-        htmlEncode: function (str) {
-            return str.replace(/[&<>"']/g, function(match) { switch (match) { case "&": return "&amp;"; case "<": return "&lt;"; case ">": return "&gt;"; case "\"": return "&quot;"; case "'": return "&#39;"; } });
-        },
-        htmlDecode: function htmlDecode(str) {
-            return str.replace(/&(amp|lt|gt|quot|#39);/g, function(match, entity) { switch (entity) { case "amp":  return "&"; case "lt":   return "<"; case "gt":   return ">"; case "quot": return "\""; case "#39":  return "'"; } });
-        },
-        trim: function (s) {
-            var start = 0;
-            var end = s.length - 1;
-            while (start <= end && (s.charAt(start) === " " || s.charAt(start) === "\t")) { start++; }
-            while (end >= start && (s.charAt(end) === " " || s.charAt(end) === "\t")) { end--; }
-            return s.substring(start, end + 1);
-        },
-        strReplace: function (s, data) {
-            var keys = [];
-            for (var k in data) {
-                if (data.hasOwnProperty(k)) { keys.push(k.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, "\\$&")); }
+            } catch (e) {
+                clearInterval(intervalId);
+                console.log("Utils.run: error in condition or callback: " + e.message);
             }
-            return s.replace(new RegExp(keys.join("|"), "g"), function(matched) {
-                return data[matched];
-            });
-        },
-        strSizeOf: function (s) {
-            var size = 0;
-            for (var i = 0, ilen = s.length; i < ilen; i++) {
-                var code = s.charCodeAt(i);
-                if (code >= 0xD800 && code <= 0xDBFF) {
-                    var next = s.charCodeAt(i + 1);
-                    if (next >= 0xDC00 && next <= 0xDFFF) {
-                        size += 4;
-                        i++;
-                        continue;
-                    }
-                    size += 3;
+        }, interval);
+    };
+    Utils.htmlEncode = function (str) {
+        return str.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split("\"").join("&quot;").split("'").join("&#39;");
+    };
+    Utils.htmlDecode = function htmlDecode(str) {
+        return str.split("&amp;").join("&").split("&lt;").join("<").split("&gt;").join(">").split("&quot;").join("\"").split("&#39;").join("'");
+    };
+    Utils.trim = function(s) {
+        var start = 0, end = s.length - 1, filter = Utils.trim.filter;
+        while (start <= end && filter[s.charCodeAt(start)]) { start++; }
+        while (end >= start && filter[s.charCodeAt(end)]) { end--; }
+        return s.substring(start, end + 1);        
+    };
+    Utils.trim.filter = {32:1, 9:1, 10:1, 13:1, 11:1, 12:1};
+    Utils.strReplace = function (s, data) {
+        var keys = [];
+        for (var k in data) {
+            if (data.hasOwnProperty(k)) { keys.push(k.replace(/[\-\/\\\^$*+?.()|\[\]{}]/g, "\\$&")); }
+        }
+        return s.replace(new RegExp(keys.join("|"), "g"), function(matched) {
+            return data[matched];
+        });
+    };
+    Utils.strSizeOf = function (s) {
+        var size = 0;
+        for (var i = 0, ilen = s.length; i < ilen; i++) {
+            var code = s.charCodeAt(i);
+            if (code >= 0xD800 && code <= 0xDBFF) {
+                var next = s.charCodeAt(i + 1);
+                if (next >= 0xDC00 && next <= 0xDFFF) {
+                    size += 4;
+                    i++;
                     continue;
                 }
-                if (code <= 0x007F) {
-                    size += 1;
-                } else if (code <= 0x07FF) {
-                    size += 2;
-                } else {
-                    size += 3;
-                }
+                size += 3;
+                continue;
             }
-            return size;
-        },
-        debounce: function (callback, time) {
-            if (typeof time !== "number" || typeof callback !== "function") {
-                console.log("Utils.debounce: Invalid arguments");
-                return function () {};
+            if (code <= 0x007F) {
+                size += 1;
+            } else if (code <= 0x07FF) {
+                size += 2;
+            } else {
+                size += 3;
             }
-            var timer;
-            function debounced() {
-                var context = this;
-                var args = arguments;
-                clearTimeout(timer);
-                timer = setTimeout(function () { callback.apply(context, args); }, time);
-            }
-            debounced.cancel = function () { clearTimeout(timer); };
-            return debounced;
-        },
-        throttle: function (callback, time) {
-            if (typeof time !== "number" || typeof callback !== "function") {
-                console.log("Utils.throttle: Invalid arguments");
-                return function () {};
-            }
-            var lastCall = 0;
-            var timeout = null;
-            function throttled() {
-                var context = this;
-                var args = arguments;
-                var now = new Date().getTime();
-                var remaining = time - (now - lastCall);
-                if (remaining <= 0) {
-                    lastCall = now;
+        }
+        return size;
+    };
+    Utils.debounce = function (callback, time) {
+        if (typeof time !== "number" || typeof callback !== "function") {
+            console.log("Utils.debounce: Invalid arguments");
+            return function () {};
+        }
+        var timer;
+        function debounced() {
+            var context = this;
+            var args = arguments;
+            clearTimeout(timer);
+            timer = setTimeout(function () { callback.apply(context, args); }, time);
+        }
+        debounced.cancel = function () { clearTimeout(timer); };
+        return debounced;
+    };
+    Utils.throttle = function (callback, time) {
+        if (typeof time !== "number" || typeof callback !== "function") {
+            console.log("Utils.throttle: Invalid arguments");
+            return function () {};
+        }
+        var lastCall = 0;
+        var timeout = null;
+        function throttled() {
+            var context = this;
+            var args = arguments;
+            var now = new Date().getTime();
+            var remaining = time - (now - lastCall);
+            if (remaining <= 0) {
+                lastCall = now;
+                callback.apply(context, args);
+            } else if (!timeout) {
+                timeout = setTimeout(function () {
+                    lastCall = new Date().getTime();
+                    timeout = null;
                     callback.apply(context, args);
-                } else if (!timeout) {
-                    timeout = setTimeout(function () {
-                        lastCall = new Date().getTime();
-                        timeout = null;
-                        callback.apply(context, args);
-                    }, remaining);
-                }
+                }, remaining);
             }
-            throttled.cancel = function () {
-                clearTimeout(timeout);
-                timeout = null;
-            };
-            return throttled;
-        },
-        objectToQuery: function(data) {
-            function buildQuery(obj, prefix) {
-                var query = [];
-                for (var key in obj) {
-                    if (obj.hasOwnProperty(key)) {
-                        var value = obj[key];
-                        var k = prefix ? prefix + "[" + key + "]": key;
-                        if (value === null || value === undefined) {
-                            continue;
-                        } else if (Object.prototype.toString.call(value) === "[object Array]") {
-                            for (var i = 0, ilen = value.length; i < ilen; i++) {
-                                var v = value[i];
-                                if (typeof v === "object") {
-                                    query.push(buildQuery(v, k + "[]"));
-                                } else {
-                                    query.push(k + "[]=" + encodeURIComponent(v));
-                                }
+        }
+        throttled.cancel = function () {
+            clearTimeout(timeout);
+            timeout = null;
+        };
+        return throttled;
+    };
+    Utils.objectToQuery = function(data) {
+        function buildQuery(obj, prefix) {
+            var query = [];
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    var value = obj[key];
+                    var k = prefix ? prefix + "[" + key + "]": key;
+                    if (value === null || value === undefined) {
+                        continue;
+                    } else if (Object.prototype.toString.call(value) === "[object Array]") {
+                        for (var i = 0, ilen = value.length; i < ilen; i++) {
+                            var v = value[i];
+                            if (typeof v === "object") {
+                                query.push(buildQuery(v, k + "[]"));
+                            } else {
+                                query.push(k + "[]=" + encodeURIComponent(v));
                             }
-                        } else if (typeof value === "object") {
-                            query.push(buildQuery(value, k));
-                        } else {
-                            query.push(k + "=" + encodeURIComponent(value));
                         }
-                    }
-                }
-                return query.join("&");
-            }
-            return buildQuery(data, null);
-        },
-        queryToObject: function(queryString) {
-            var query = {};
-            if (!queryString) { return query; }
-            function setDeep(obj, keys, value) {
-                var key = keys.shift();
-                if (keys.length === 0) {
-                    if (key === "") {
-                        if (Object.prototype.toString.call(obj) !== "[object Array]") obj = [];
-                        obj.push(value);
-                    } else if (obj[key] === undefined) {
-                        obj[key] = value;
-                    } else if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
-                        obj[key].push(value);
+                    } else if (typeof value === "object") {
+                        query.push(buildQuery(value, k));
                     } else {
-                        obj[key] = [obj[key], value];
+                        query.push(k + "=" + encodeURIComponent(value));
                     }
-                    return obj;
                 }
+            }
+            return query.join("&");
+        }
+        return buildQuery(data, null);
+    };
+    Utils.queryToObject = function(queryString) {
+        var query = {};
+        if (!queryString) { return query; }
+        function setDeep(obj, keys, value) {
+            var key = keys.shift();
+            if (keys.length === 0) {
                 if (key === "") {
-                    if (Object.prototype.toString.call(obj) !== "[object Array]") { obj = []; }
-                    if (obj.length === 0 || typeof obj[obj.length - 1] !== "object") { obj.push({}); }
-                    obj[obj.length - 1] = setDeep(obj[obj.length - 1], keys, value);
+                    if (Object.prototype.toString.call(obj) !== "[object Array]") obj = [];
+                    obj.push(value);
+                } else if (obj[key] === undefined) {
+                    obj[key] = value;
+                } else if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
+                    obj[key].push(value);
                 } else {
-                    if (!obj[key]) { obj[key] = {}; }
-                    obj[key] = setDeep(obj[key], keys, value);
+                    obj[key] = [obj[key], value];
                 }
                 return obj;
             }
-            var parts = queryString.split("&");
-            for (var i = 0, ilen = parts.length; i < ilen; i++) {
-                var part = parts[i];
-                if (!part) { continue; }
-                var kv = part.split("=");
-                var rawKey = decodeURIComponent(kv[0]);
-                var val = kv.length > 1 ? decodeURIComponent(kv[1]): "";
-                var keys = [];
-                var keyRegex = /([^\[\]]+)|(\[\])/g;
-                var match;
-                while ((match = keyRegex.exec(rawKey)) !== null) {
-                    if (match[1]) {
-                        keys.push(match[1]);
-                    } else {
-                        keys.push("");
-                    }
-                }
-                query = setDeep(query, keys, val);
+            if (key === "") {
+                if (Object.prototype.toString.call(obj) !== "[object Array]") { obj = []; }
+                if (obj.length === 0 || typeof obj[obj.length - 1] !== "object") { obj.push({}); }
+                obj[obj.length - 1] = setDeep(obj[obj.length - 1], keys, value);
+            } else {
+                if (!obj[key]) { obj[key] = {}; }
+                obj[key] = setDeep(obj[key], keys, value);
             }
-            return query;
+            return obj;
         }
+        var parts = queryString.split("&");
+        for (var i = 0, ilen = parts.length; i < ilen; i++) {
+            var part = parts[i];
+            if (!part) { continue; }
+            var kv = part.split("=");
+            var rawKey = decodeURIComponent(kv[0]);
+            var val = kv.length > 1 ? decodeURIComponent(kv[1]): "";
+            var keys = [];
+            var keyRegex = /([^\[\]]+)|(\[\])/g;
+            var match;
+            while ((match = keyRegex.exec(rawKey)) !== null) {
+                if (match[1]) {
+                    keys.push(match[1]);
+                } else {
+                    keys.push("");
+                }
+            }
+            query = setDeep(query, keys, val);
+        }
+        return query;
     };
+
     function Url(baseUrl) {
         this.url = baseUrl || (global.location && global.location.href) || "";
         var parts = this.url.split("#");
@@ -400,12 +400,12 @@ limitations under the License.
     };
     function Response(xhr) {
         this.headers = {};
-        var headerStr = xhr.getAllResponseHeaders();
+        var headersStr = xhr.getAllResponseHeaders();
 
-        if (headerStr) {
-            var headerPairs = headerStr.split(/\r?\n/);
-            for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
-                var line = headerPairs[i];
+        if (headersStr) {
+            var lines = headersStr.split("\n");
+            for (var i = 0, ilen = lines.length; i < ilen; i++) {
+                var line = lines[i];
                 if (line === "") { continue; }
                 var colonPos = -1;
                 for (var j = 0, jlen = line.length; j < jlen; j++) {
@@ -540,15 +540,15 @@ limitations under the License.
     ElX.prototype.init = function(elements, tabStr) {
         this.mutationDepth++;
 
-        var tab = (tabStr || this.tab.default_first + ":" + this.tab.default_last).split(/\s*:\s*/);
+        var tab = Utils.trim(tabStr || this.tab.default_first + ":" + this.tab.default_last).split(":");
         var elementsLength = elements.length;
 
         for (var i = 0, ilen = elementsLength; i < ilen; i++) {
             var el = elements[i];
             for (var j = 0, jlen = el.attributes.length; j < jlen; j++) {
                 var attr = el.attributes[j];
-                if (attr.name.slice(0, 6) === "x-ref-") {
-                    var key = attr.name.slice(6);
+                if (attr.name.substring(0, 6) === "x-ref-") {
+                    var key = attr.name.substring(6);
                     var isDuplicate = false;
                     if (!this.refs[key]) { this.refs[key] = []; }
                     for (var k = 0, klen = this.refs[key].length; k < klen; k++) {
@@ -612,7 +612,7 @@ limitations under the License.
                     el.oninput = function(e) { return that.processElement(el, el.getAttribute("x-on-input"), e || window.event); };
                 }
                 if (el.getAttribute("x-on-key") !== null) {
-                    var keys = (el.getAttribute("x-on-key")).toLowerCase().split(/\s+/);
+                    var keys = (el.getAttribute("x-on-key")).toLowerCase().split(" ");
                     var keysObj = {};
                     for (var j = 0, jlen = keys.length; j < jlen; j++) { keysObj[keys[j]] = true; }
                     el.onkeydown = function(e) {
@@ -627,7 +627,7 @@ limitations under the License.
             })(el, that);
 
             if (el.getAttribute("x-on-key-window") !== null) {
-                var keys = (el.getAttribute("x-on-key-window")).toLowerCase().split(/\s+/);
+                var keys = (el.getAttribute("x-on-key-window")).toLowerCase().split(" ");
                 for (var j = 0, jlen = keys.length; j < jlen; j++) {
                     var key = keys[j];
                     if (!that.keys[key]) { that.keys[key] = []; }
@@ -700,12 +700,11 @@ limitations under the License.
         this.taps[key][index] = function () {};
     };
     ElX.prototype.rot = function(key, attrValue, el) {
-        var dataState = attrValue || "";
-        var states = dataState.split(/\s+/);
+        var states = attrValue.split(" ");
         var els = (key == "this") ? [el] : (this.refs[key] || []);
         for (var j = 0, jlen = els.length; j < jlen; j++) {
             var refEl = els[j];
-            var classList = (refEl.className || "").split(/\s+/);
+            var classList = Utils.trim(refEl.className || "").split(" ");
             var current = classList[classList.length - 1];
             var currentIndex = -1;
             for (var k = 0, klen = states.length; k < klen; k++) {
@@ -722,8 +721,7 @@ limitations under the License.
         }
     };
     ElX.prototype.set = function(key, attrName, attrValue, el) {
-        var dataState = attrValue || "";
-        var states = dataState.split(/\s*\|\s*/);
+        var states = attrValue.split("|");
         var els = (key == "this") ? [el] : (this.refs[key] || []);
         for (var j = 0, jlen = els.length; j < jlen; j++) {
             var refEl = els[j];
@@ -753,7 +751,7 @@ limitations under the License.
                     refEl.value = val;
                 }
             } else if (refEl.children.length === 0 && val != refEl.innerHTML) {
-                refEl.innerHTML = Utils.htmlEncode(val);
+                refEl.innerHTML = Utils.htmlEncode(val == null ? "" : String(val));
             }
         }
     };
@@ -768,11 +766,14 @@ limitations under the License.
             for (var w = 0, wlen = this.taps["*"].length; w < wlen; w++) { this.taps["*"][w](key, old, value, el); }
         }
     };
-    ElX.prototype.run = function(key, triggersStr) {
-        var triggers = triggersStr.split(/\s+/);
+    ElX.prototype.run = function(key, attrValue) {
+        var triggers = attrValue.split(" ");
         for (var i = 0, ilen = triggers.length; i < ilen; i++) {
             var refs = this.refs[key] || [];
-            for (var j = 0, jlen = refs.length; j < jlen; j++) { this.processElement(refs[j], refs[j].getAttribute(triggers[i])); }
+            for (var j = 0, jlen = refs.length; j < jlen; j++) {
+                var ruleStr = refs[j].getAttribute(triggers[i]);
+                if (ruleStr !== null) this.processElement(refs[j], ruleStr);
+            }
         }
     };
     ElX.prototype.processElement = function(el, ruleStr, e) {
@@ -801,37 +802,38 @@ limitations under the License.
 
         return !(e && el.getAttribute("x-prevent") !== null);
     };
-    ElX.prototype._processElement = function(el, elValue) {
+    ElX.prototype._processElement = function(el, ruleStr) {
         var mode = "";
         var rules = [];
         var rulesObj = {};
 
-        elValue = Utils.trim(elValue || "");
-        if (elValue === "") {
+        ruleStr = Utils.trim(ruleStr || "");
+        if (ruleStr === "") {
             mode = "*";
-        } else if (elValue[0] === "!") {
+        } else if (ruleStr.charAt(0) === "!") {
             mode = "!";
-            rules = elValue.slice(1).split(/\s+/);
+            rules = ruleStr.substring(1).split(" ");
         } else {
-            rules = elValue.split(/\s+/);
+            rules = ruleStr.split(" ");
         }
 
         for (var i = 0, ilen = rules.length; i < ilen; i++) { rulesObj[rules[i]] = true; }
 
         var tab = null;
         var focus = null;
+        var elThis = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked.toString() : el.value || (el.children.length === 0 ? el.innerHTML : "");
         var elAttributes = el.attributes;
         for (var i = 0, ilen = elAttributes.length; i < ilen; i++) {
             var attr = elAttributes[i];
             var attrName = attr.name;
-            var attrValue = attr.value;
-            var prefix = attrName.slice(0, 6);
-            var keyAttrArr = attrName.slice(6).split(".");
+            var attrValue = Utils.trim(attr.value);
+            var prefix = attrName.substring(0, 6);
+            var keyAttrArr = attrName.substring(6).split(".");
             var key = keyAttrArr[0];
 
             if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
 
-            if (Utils.trim(attrValue) === "this") { attrValue = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked.toString() : el.value || (el.children.length === 0 ? el.innerHTML : ""); }
+            if (attrValue === "this") { attrValue = elThis; }
 
             if (prefix === "x-rot-") { this.rot(key, attrValue, el); }
 
@@ -849,7 +851,7 @@ limitations under the License.
                 this.tab.last = null;
             }
 
-            else if (!tab && attrName === "x-tab") { tab = attrValue.split(/\s*:\s*/); }
+            else if (!tab && attrName === "x-tab") { tab = attrValue.split(":"); }
 
             else if (!focus && attrName === "x-focus") { focus = attrValue; }
         }
