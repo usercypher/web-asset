@@ -45,6 +45,14 @@ html {
     --sidebar-width: 220px;
 }
 
+blockquote, pre, code, kbd, samp, var, button, .button, input, .input, textarea, select, input.select, textarea, fieldset, iframe, .block, .modal-content, #chat-window, .chat-message {
+    border-radius: 8px;
+}
+
+.block {
+    margin: 0;
+}
+
 body {
   min-height: 100vh;
   display: flex;
@@ -112,6 +120,7 @@ main {
     display: flex;
     flex: 1;
     min-height: 720px;
+    max-width: 1280px;
 }
 
 .main-content {
@@ -122,7 +131,7 @@ main {
 }
 
 .main-content-item {
-    margin: 2rem;
+    margin: 1rem;
     overflow-x: auto;
     overflow-y: auto;
 }
