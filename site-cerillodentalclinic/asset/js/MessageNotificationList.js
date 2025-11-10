@@ -3,7 +3,7 @@
 
     function MessageNotificationList() {}
 
-    MessageNotificationList.prototype.init = function(url, latestMessageTime) {
+    MessageNotificationList.prototype.init = function(urlBase, url, latestMessageTime) {
         var notificationContainer = new El("notification-container");
         var request = new Request(new XMLHttpRequest());
         var isPollingActive = true;
@@ -13,10 +13,17 @@
     
         function notificationItemTemplate(data) {
             return `
-                <div class="block notification-item ${data.is_read}">
-                    <h4>${data.subject}</h4>
-                    <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.body}</p>
-                    <small>${data.sent_at}</small>
+                <div class="tile p-1">
+                    <div class="tile-icon">
+                        <figure class="avatar avatar-lg s-rounded" data-initial="TO"></figure>
+                    </div>
+                    <div class="tile-content">
+                        <p class="tile-title text-bold"><a href="${Utils.strReplace(urlBase, {':id' : data.id})}">${data.subject}</a></p>
+                        <p class="tile-subtitle" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${data.body}</p>
+                    </div>
+                    <div class="tile-action text-gray">
+                        ${data.sent_at}
+                    </div>
                 </div>
             `;
         }
@@ -50,11 +57,7 @@
     
                             latestMessageTime = notificationItem['sent_at'];
     
-                            notificationItem['is_read'] =
-                                notificationItem['key'] == null ? '' : 'read';
-    
                             notificationItem['sent_at'] = new Date().toLocaleDateString('en-US', {
-                                'year': 'numeric',
                                 'month': 'short',
                                 'day': 'numeric'
                             });

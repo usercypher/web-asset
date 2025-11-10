@@ -749,39 +749,39 @@ limitations under the License.
             var attr = elAttributes[i];
             var attrName = attr.name;
             var attrValue = Utils.trim(attr.value);
-            var prefix = attrName.substring(0, 6);
-            var keyAttrArr = attrName.substring(6).split(".");
+            var attrNameArr = attrName.split("-");
+            var prefix = attrNameArr[0] + "-" + (attrNameArr[1] || "");
+            var keyAttrArr = attrNameArr.slice(2).join("-").split(".");
             var key = keyAttrArr[0];
 
-            if (!(mode === "*" || (mode === "!" && !rulesObj.hasOwnProperty(key)) || (mode === "" && rulesObj.hasOwnProperty(key)))) { continue; }
+            if (!(mode === "*" || (mode === "!" && !(rulesObj[key] || rulesObj[attrName])) || (mode === "" && (rulesObj[key] || rulesObj[attrName])))) { continue; }
 
             if (attrValue === "this") {
                 if (!ElX.elThis) { ElX.elThis = (el.tagName.toUpperCase() === "INPUT" && (el.type === "checkbox" || el.type === "radio")) ? el.checked.toString() : el.value || (el.children.length === 0 ? el.innerHTML : ""); }
                 attrValue = ElX.elThis;
             }
 
-            if (prefix === "x-rot-") { ElX.rot(key, attrValue, el); }
+            if (prefix === "x-rot") { ElX.rot(key, attrValue, el); }
 
-            else if (prefix === "x-set-") { ElX.set(key, keyAttrArr.slice(1).join("."), attrValue, el); }
+            else if (prefix === "x-set") { ElX.set(key, keyAttrArr.slice(1).join("."), attrValue, el); }
 
-            else if (prefix === "x-val-") { ElX.val(key, attrValue, el); }
+            else if (prefix === "x-val") { ElX.val(key, attrValue, el); }
 
-            else if (prefix === "x-var-") { ElX.var(key, attrValue, event); }
+            else if (prefix === "x-var") { ElX.var(key, attrValue, event); }
 
-            else if (prefix === "x-run-") { ElX.run(key, attrValue); }
+            else if (prefix === "x-run") { ElX.run(key, attrValue); }
 
-            else if (!tab && attrName === "x-tab-reset") {
-                tab = [ElX.tab.default_first, ElX.tab.default_last];
+            else if (!tab && prefix === "x-tab") {
+                tab = attrValue.split(":");
+                if (tab.length !== 2) { tab = [ElX.tab.default_first, ElX.tab.default_last]; }
                 ElX.tab.first = null;
                 ElX.tab.last = null;
             }
 
-            else if (!tab && attrName === "x-tab") { tab = attrValue.split(":"); }
-
-            else if (!focus && attrName === "x-focus") { focus = attrValue; }
+            else if (!focus && prefix === "x-focus") { focus = attrValue; }
         }
 
-        if (tab && tab.length === 2) {
+        if (tab) {
             if (ElX.refs[tab[0]]) { ElX.tab.first = ElX.refs[tab[0]][0]; }
             if (ElX.refs[tab[1]]) { ElX.tab.last = ElX.refs[tab[1]][0]; }
         }

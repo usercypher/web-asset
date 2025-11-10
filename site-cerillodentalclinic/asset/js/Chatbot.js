@@ -39,10 +39,14 @@
                 sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory));
             }
             return `
-                <div class="chat-message ${type}">
+                <div
+                    class="chat-message ${type === 'sent' ? 'bg-primary text-secondary' : 'bg-gray'}"
+                    style="max-width: 270px; padding: 0.5em 1em; margin-bottom: 1em; ${type === 'sent' ? 'float: right;' : 'clear: both;' }"
+                >
                     ${text}
                 </div>
             `;
+
         }
 
         // Scroll to bottom of chat
@@ -136,13 +140,13 @@
             // Append user message
             chatMessages.append(messageTemplate(message, 'sent'));
             chatInput.value = '';
-            chatSend.classList.add('inactive');
+            chatSend.classList.add('loading');
             scrollToBottom();
 
             request.addCallback(function(request, response) {
                 if (response.code === 0) {
                     chatMessages.append(messageTemplate('No internet connection.', 'received'));
-                    chatSend.classList.remove('inactive');
+                    chatSend.classList.remove('loading');
                     sending = false;
                 } else {
                     var result = JSON.parse(response.content);
@@ -150,7 +154,7 @@
                     if (response.code > 299) {
                         chatMessages.append(messageTemplate(result.error, 'received'));
                         console.log(result.error);
-                        chatSend.classList.remove('inactive');
+                        chatSend.classList.remove('loading');
                         sending = false;
                         return;
                     }
@@ -178,16 +182,16 @@
             request.addCallback(function(request, response) {
                 if (response.code === 0) {
                     chatMessages.append(messageTemplate('No internet connection.', 'received'));
-                    chatSend.classList.remove('inactive');
+                    chatSend.classList.remove('loading');
                 } else {
                     var result = JSON.parse(response.content);
                     if (response.code > 299) {
                         chatMessages.append(messageTemplate('Something went wrong. Please try again later.', 'received'));
-                        chatSend.classList.remove('inactive');
+                        chatSend.classList.remove('loading');
                         console.log(result.error);
                     } else {
                         chatMessages.append(messageTemplate(result['candidates'][0]['content']['parts'][0]['text'], 'received'));
-                        chatSend.classList.remove('inactive');
+                        chatSend.classList.remove('loading');
                         scrollToBottom();
                     }
                 }
