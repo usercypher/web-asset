@@ -25,11 +25,11 @@
             var datesTpl = "";
             dates.forEach(d => {
                 datesTpl += `
-                    <span class="chip _" x-on-click x-ref--appointment-data-date x-var--appointment-data-date="${d}">${new Date(d).toLocaleDateString('en-US', {
+                    <label class="chip _" x-on-click x-ref--appointment-data-date x-var--appointment-data-date="${d}">${new Date(d).toLocaleDateString('en-US', {
                         month: 'short',   // "Sep"
                         day: 'numeric',   // "29"
                         year: 'numeric'   // "2025"
-                    })}</span>
+                    })}</label>
                 `;
             });
             
