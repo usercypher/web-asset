@@ -577,9 +577,9 @@ limitations under the License.
         if (e.shiftKey) { modifiers.push("shift"); }
         return (modifiers.length ? modifiers.join("-") + "-" : "") + ((e.key ? e.key: String.fromCharCode(e.keyCode || e.which)).toLowerCase());
     };
-    ElX.clean = function() {
+    ElX.clean = function(input) {
         ElX.mutationDepth++;
-        var body = new El(window.document.getElementsByTagName('body')[0]);
+        var body = new El(input || window.document.getElementsByTagName('body')[0]);
         for (var i = 0, object = ElX.refs; i < 2; i++, object = ElX.keys) {
             for (var key in object) {
                 if (object.hasOwnProperty(key)) {
