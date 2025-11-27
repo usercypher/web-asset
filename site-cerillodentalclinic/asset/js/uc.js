@@ -24,17 +24,12 @@ limitations under the License.
         var interval = options.interval || 100;
         var timeout = options.timeout || 30000;
         var intervalId = setInterval(function () {
-            try {
-                if (condition()) {
-                    clearInterval(intervalId);
-                    callback();
-                } else if (new Date().getTime() - startTime >= timeout) {
-                    clearInterval(intervalId);
-                    console.log("Utils.run: timeout reached without condition being true.");
-                }
-            } catch (e) {
+            if (condition()) {
                 clearInterval(intervalId);
-                console.log("Utils.run: error in condition or callback: " + e.message);
+                callback();
+            } else if (new Date().getTime() - startTime >= timeout) {
+                clearInterval(intervalId);
+                console.log("Utils.run: timeout reached without condition being true.");
             }
         }, interval);
     };
@@ -85,10 +80,6 @@ limitations under the License.
         return size;
     };
     Utils.debounce = function (callback, time) {
-        if (typeof time !== "number" || typeof callback !== "function") {
-            console.log("Utils.debounce: Invalid arguments");
-            return function () {};
-        }
         var timer;
         function debounced() {
             var context = this;
@@ -100,10 +91,6 @@ limitations under the License.
         return debounced;
     };
     Utils.throttle = function (callback, time) {
-        if (typeof time !== "number" || typeof callback !== "function") {
-            console.log("Utils.throttle: Invalid arguments");
-            return function () {};
-        }
         var lastCall = 0;
         var timeout = null;
         function throttled() {
@@ -302,7 +289,7 @@ limitations under the License.
         var self = this;
         var cached = this.cacheEnabled ? this.getCacheEntry(url): null;
         if (cached) {
-            this.nextCallback(this, new Response( {
+            this.nextCallback(this, new Response({
                 "status": 200,
                 "responseText": cached,
                 "getAllResponseHeaders": function () { return "X-Cache: HIT"; }
@@ -318,7 +305,7 @@ limitations under the License.
             timeoutId = setTimeout(function () {
                 self.xhr.abort();
                 console.log("Request: Request timed out and was aborted.");
-                self.nextCallback(self, new Response( {
+                self.nextCallback(self, new Response({
                     "status": 408,
                     "responseText": "",
                     "getAllResponseHeaders": function () { return "X-Timeout: true"; }
@@ -433,7 +420,7 @@ limitations under the License.
         return this;
     };
     Request.prototype.getData = function (key, defaultValue) {
-        return Object.prototype.hasOwnProperty.call(this.data, key) ? this.data[key]: (defaultValue !== undefined ? defaultValue: null);
+        return this.data[key] || (defaultValue !== undefined ? defaultValue : null);
     };
     function Response(xhr) {
         this.headers = {};
@@ -466,15 +453,8 @@ limitations under the License.
     function El(input) {
         if (typeof input === 'string') {
             this.el = window.document.getElementById(input);
-            if (!this.el) {
-                console.log("El: No element found with ID '" + input + "'");
-                return;
-            }
-        } else if (input && typeof input === 'object' && input.nodeType === 1) {
+        } else if (typeof input === 'object' && input.nodeType === 1) {
             this.el = input;
-        } else {
-            console.log("El: Invalid argument must be a string ID or a DOM element");
-            return;
         }
         this.lastContent = "";
         this.isLastContentSaved = false;
@@ -626,26 +606,20 @@ limitations under the License.
     };
     ElX.tap = function(key, callback, context) {
         if (!ElX.taps[key]) { ElX.taps[key] = []; }
-        return ElX.taps[key].push([callback, context || {}]) - 1;
+        return ElX.taps[key].push([callback, context]) - 1;
     };
     ElX.untap = function(key, index) {
         ElX.taps[key][index] = null;
     };
     ElX.rot = function(key, value, el) {
-        var states = value.split(" ");
+        var states = value.split(" ", 2);
+        if (states[1] === undefined) { states[1] = states[0]; }
         var els = (key == "this") ? [el] : (ElX.refs[key] || []);
         for (var i = 0, ilen = els.length; i < ilen; i++) {
             var refEl = els[i];
             var classList = Utils.trim(refEl.className).split(" ");
             var current = classList[classList.length - 1];
-            var currentIndex = -1;
-            for (var j = 0, jlen = states.length; j < jlen; j++) {
-                if (current === states[j]) {
-                    currentIndex = j;
-                    break;
-                }
-            }
-            var newState = states[(currentIndex + 1) % states.length] || "_";
+            var newState = states[current === states[0] ? 1 : 0] || "_";
             if (current !== newState) {
                 classList[classList.length - 1] = newState;
                 refEl.className = classList.join(" ");
@@ -653,20 +627,14 @@ limitations under the License.
         }
     };
     ElX.set = function(key, attr, value, el) {
-        var states = value.split("|");
+        var states = value.split("|", 2);
+        if (states[1] === undefined) { states[1] = states[0]; }
         var els = (key == "this") ? [el] : (ElX.refs[key] || []);
         for (var i = 0, ilen = els.length; i < ilen; i++) {
             var refEl = els[i];
             var current = refEl.getAttribute(attr);
             current = current !== null ? current : "null";
-            var currentIndex = -1;
-            for (var j = 0, jlen = states.length; j < jlen; j++) {
-                if (current === states[j]) {
-                    currentIndex = j;
-                    break;
-                }
-            }
-            var newState = states[(currentIndex + 1) % states.length] || "";
+            var newState = states[current === states[0] ? 1 : 0] || "";
             if (current !== newState && newState !== "null") { refEl.setAttribute(attr, newState); }
             else if (current !== "null" && newState === "null") { refEl.removeAttribute(attr); }
         }
@@ -801,12 +769,11 @@ limitations under the License.
     ElX.oninput = function (e) { return ElX.queueEvent("x-on-input", this, e || window.event); };
     ElX.onkey = function (e) {
         e = e || window.event;
-        var key = ElX.getComboKey(e || window.event);
+        var key = ElX.getComboKey(e);
         var keys = (this.getAttribute("x-on-key") || "").toLowerCase().split(" ");
         for (var i = 0, ilen = keys.length; i < ilen; i++) {
             if (key == keys[i]) {
-                ElX.queueEvent("x-on-key-" + key, this, e);
-                return false;
+                return ElX.queueEvent("x-on-key-" + key, this, e);
             }
         }
     };
@@ -833,7 +800,7 @@ limitations under the License.
     function X(elx, key, value) {
         this.elx = elx;
         this.key = key;
-        if (value) { this.elx.vars[key] = value; }
+        this.elx.vars[key] = value;
     }
     X.prototype.value = function() { return this.elx.vars[this.key]; };
     X.prototype.ref = function() { return this.elx.refs[this.key] || []; };

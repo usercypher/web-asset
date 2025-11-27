@@ -29,7 +29,7 @@
                         month: 'short',   // "Sep"
                         day: 'numeric',   // "29"
                         year: 'numeric'   // "2025"
-                    })}</label>
+                    })}</label><br>
                 `;
             });
             
@@ -105,7 +105,7 @@
                     <tr>
                         <th>Time</th>
                         <th>Duration</th>
-                        <th>Price</th>
+                        <th>Rate</th>
                         <th>Doctor</th>
                         <th>Action</th>
                     </tr>
