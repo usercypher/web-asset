@@ -79,7 +79,7 @@
     
             request.send(url, {
                 'method': "POST",
-                'headers': {
+                'header': {
                     "Accept": "application/json",
                     "Content-Type": "application/x-www-form-urlencoded"
                 },

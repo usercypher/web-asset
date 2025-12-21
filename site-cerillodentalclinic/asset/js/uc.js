@@ -282,7 +282,7 @@ limitations under the License.
     }
     Request.prototype.send = function (url, option) {
         var method = option.method || "GET";
-        var headers = option.headers || {};
+        var header = option.header || {};
         var content = option.content || "";
         var timeout = option.timeout || -1;
         var timeoutId;
@@ -298,8 +298,8 @@ limitations under the License.
         }
         this.xhr.open(method, url, true);
         this.xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        for (var key in headers) {
-            if (headers.hasOwnProperty(key)) { this.xhr.setRequestHeader(key, headers[key]); }
+        for (var key in header) {
+            if (header.hasOwnProperty(key)) { this.xhr.setRequestHeader(key, header[key]); }
         }
         if (timeout !== -1) {
             timeoutId = setTimeout(function () {
@@ -423,11 +423,11 @@ limitations under the License.
         return this.data[key] || (defaultValue !== undefined ? defaultValue : null);
     };
     function Response(xhr) {
-        this.headers = {};
-        var headersStr = xhr.getAllResponseHeaders();
+        this.header = {};
+        var headerStr = xhr.getAllResponseHeaders();
 
-        if (headersStr) {
-            var lines = headersStr.split("\n");
+        if (headerStr) {
+            var lines = headerStr.split("\n");
             for (var i = 0, ilen = lines.length; i < ilen; i++) {
                 var line = lines[i];
                 if (line === "") { continue; }
@@ -443,7 +443,7 @@ limitations under the License.
                 var key = Utils.trim(line.substring(0, colonPos)).toLowerCase();
                 if (key === "") { continue; }
                 var value = Utils.trim(line.substring(colonPos + 1));
-                this.headers[key] = value;
+                this.header[key] = value;
             }
         }
 

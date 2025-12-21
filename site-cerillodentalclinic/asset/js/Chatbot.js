@@ -161,7 +161,7 @@
 
                     request.send(result.url, {
                         'method': 'POST',
-                        'headers': { 
+                        'header': { 
                             'Content-Type': "application/json",
                             'X-goog-api-key': result.key,
                         },
@@ -202,7 +202,7 @@
 
             request.send(url, {
                 'method': "POST",
-                'headers': {
+                'header': {
                     "Accept": "application/json",
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
